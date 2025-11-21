@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="your_primary_color">#504C36F4</color> <!-- Синий -->
+    <color name="your_primary_dark_color">#504C36F4</color> <!-- Темно-синий -->
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="card_background">#F5F5F5</color>
+    <color name="card_text">#212121</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="gray">#FF888888</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="blue_500">#2196F3</color>
+
+    <color name="cardview_light_background">#FFFFFFFF</color>
+    <color name="cardview_dark_background">#FF000000</color>
+    <color name="card_default_background">#FAF9F9</color>
+
+    <color name="selected_tag_color">#FF6200EE</color>
+
+    <color name="tag_default_background">#FFFFFFFF</color>
+    <color name="tag_default_text">#FF666666</color>
+    <color name="tag_selected_background">#FF6200EE</color>
+    <color name="tag_selected_text">#FFFFFFFF</color>
+    <color name="tag_stroke">#FFDDDDDD</color>
+    <color name="tag_selected_stroke">#FF6200EE</color>
+
+    <color name="tag_stroke_color_1">#F60505</color>
+    <color name="tag_stroke_color_2">#009688</color>
+    <color name="tag_stroke_color_3">#03A9F4</color>
+    <color name="tag_stroke_color_4">#FF00A6</color>
+    <color name="tag_stroke_color_5">#00FD40</color>
+    <color name="tag_stroke_color_6">#FF7304</color>
+
+<!--    <color name="button_primary">#FF6750A4</color>          &lt;!&ndash; Основной цвет кнопок &ndash;&gt;-->
+    <color name="button_primary_text">#FFFFFFFF</color>     <!-- Текст на основной кнопке -->
+<!--    <color name="button_outline">#FF6750A4</color>          &lt;!&ndash; Цвет обводки &ndash;&gt;-->
+    <color name="button_outline_text">#FF6750A4</color>     <!-- Текст на контурной кнопке -->
+    <color name="button_surface">#FFFFFBFE</color>
+
+    <color name="FFFFFF">#FFFFFF</color>
+    <color name="a">#00FF37</color> //4ECDC4
+    <color name="b">#1D90DB</color> //45B7D1
+    <color name="c">#5003EB</color> //96CEB4
+    <color name="d">#E77805</color> //FECA57
+    <color name="e">#EF096D</color> //FF9FF3
+    <color name="f">#E9241F</color> //6A0572
+    <color name="h">#1C707C</color> //1A535C
+    <color name="g">#FDD835</color> //4A4A4A
+    <color name="ch">#054564</color> //118AB2
+    <color name="sh">#47021E</color> //06D6A0
+    <color name="s">#CCAEA9</color> //FF6B6B
+
+    <color name="button_primary">#508379C5</color>
+    <color name="button_outline">#508379C5</color>
+
+    <!-- Цвета для неактивных кнопок -->
+    <color name="button_disabled">#FF9E9E9E</color>
+    <color name="button_disabled_text">#FF616161</color>
+
+    <!-- Дополнительные цвета если нужно -->
+    <color name="button_shuffle">#FF4CAF50</color> <!-- Зеленый для перемешать -->
+    <color name="button_next">#FF2196F3</color>
+
+    <color name="background_color">#FFF5F5F5</color>
+    <color name="card_front_color">#FFFFFFFF</color>
+    <color name="card_back_color">#FFE3F2FD</color>
+
+    <!-- Добавьте в res/values/colors.xml -->
+    <color name="red_500">#F44336</color>
+    <color name="green_500">#4CAF50</color>
+
+    <color name="purple_1500">#C4BEF9</color>
+
+
+    <color name="orange_500">#FF9800</color>
+
+<!--    <color name="selection_overlay">#33000000</color>-->
+    <!-- или более темный вариант -->
+    <color name="selection_overlay">#4D251147</color>
+
+    <color name="purple_50">#F3E5F5</color>
+    <color name="purple_100">#E1BEE7</color>
+    <color name="orange_50">#FFF3E0</color>
+    <color name="blue_50">#E3F2FD</color>
+    <color name="gray_100">#F5F5F5</color>
+    <color name="gray_200">#EEEEEE</color>
+    <color name="green_600">#2E7D32</color>
+    <color name="orange_600">#F57C00</color>
+    <color name="purple_600">#8E24AA</color>
+
+    <color name="gray_500">#FF9E9E9E</color>
+    <color name="gray_600">#FF757575</color>
+    <color name="gray_700">#FF616161</color>
+
+</resources>

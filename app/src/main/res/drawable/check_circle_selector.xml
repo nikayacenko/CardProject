@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <layer-list>
+            <!-- Внешний круг -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="@android:color/white" />
+                    <stroke
+                        android:width="2dp"
+                        android:color="@android:color/white" />
+                </shape>
+            </item>
+            <!-- Внутренняя галочка -->
+            <item android:top="4dp" android:bottom="4dp" android:left="4dp" android:right="4dp">
+                <shape android:shape="oval">
+                    <solid android:color="?attr/colorPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_checked="false">
+        <!-- Невыбранное состояние - белый круг с обводкой -->
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="2dp"
+                android:color="@android:color/white" />
+        </shape>
+    </item>
+</selector>

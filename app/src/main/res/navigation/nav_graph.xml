@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/deckListFragment">
+
+    <fragment
+        android:id="@+id/deckListFragment"
+        android:name="com.example.cardproject.ui.deck.DeckListFragment"
+        android:label="Decks"
+        tools:layout="@layout/fragment_deck_list">
+
+        <action
+            android:id="@+id/action_deckList_to_cardList"
+            app:destination="@id/cardListFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/cardListFragment"
+        android:name="com.example.cardproject.ui.card.CardListFragment"
+        android:label="Cards"
+        tools:layout="@layout/fragment_card_list">
+
+        <argument
+            android:name="deckId"
+            app:argType="long" />
+
+    </fragment>
+
+</navigation>

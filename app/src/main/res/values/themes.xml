@@ -1,0 +1,37 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.CardProject" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#508379C5</item>
+        <item name="colorPrimaryVariant">#504C36F4</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Для Material Components -->
+        <item name="colorPrimarySurface">@color/your_primary_color</item>
+    </style>
+    <style name="RoundedDialogTheme" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="dialogCornerRadius">16dp</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+    <style name="Theme.CardProject" parent="Base.Theme.CardProject" />
+
+    <style name="Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#C2B9F8</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Стиль для контурной кнопки -->
+    <style name="Button.Outline" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">#C2B9F8</item>
+        <item name="android:textColor">@color/button_outline</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+
+    <!-- Стиль для неактивной кнопки -->
+    <style name="Button.Disabled" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/button_disabled</item>
+        <item name="android:textColor">@color/button_disabled_text</item>
+    </style>
+    <style name="BrightButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#FF6200EE</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+</resources>

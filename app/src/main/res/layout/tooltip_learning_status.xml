@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Текст подсказки -->
+    <TextView
+        android:id="@+id/tooltipText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="180dp"
+        android:minWidth="120dp"
+        android:padding="12dp"
+        android:background="@drawable/bg_tooltip"
+        android:text="Подсказка"
+        android:textColor="#1B114D"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2dp"
+        android:gravity="center" />
+
+    <!-- Стрелочка - выравниваем по правому краю -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:paddingEnd="27dp">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="8dp"
+            android:src="@drawable/tooltip_arrow" />
+
+    </LinearLayout>
+
+</LinearLayout>

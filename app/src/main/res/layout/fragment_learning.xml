@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <!-- Тулбар с кнопкой назад -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#C4BAFA"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:title="Интервальное повторение" />
+
+    <!-- Прогресс и счетчик -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Счетчик -->
+        <TextView
+            android:id="@+id/cardCounter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="1/10"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Шкала прогресса -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/cardProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:trackThickness="6dp" />
+
+        <!-- Прогресс обучения -->
+        <TextView
+            android:id="@+id/progressText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Всего: 0 | К изучению: 0 | Изучено: 0"
+            android:textSize="14sp" />
+
+        <!-- Режим обучения -->
+        <TextView
+            android:id="@+id/learningModeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="Долговременное обучение"
+            android:textColor="@color/purple_500"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <!-- Контейнер карточки -->
+    <FrameLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/white"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="32dp">
+
+        <!-- Передняя сторона карточки -->
+        <LinearLayout
+            android:id="@+id/cardFrontLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card_fullscreen"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/cardFrontText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Передняя сторона карточки"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Задняя сторона карточки -->
+        <LinearLayout
+            android:id="@+id/cardBackLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card_fullscreen"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:rotationY="0"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/cardBackText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:linksClickable="true"
+                android:text="Задняя сторона карточки"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+
+            <!-- Кнопка показать полностью -->
+            <Button
+                android:id="@+id/btnShowFull"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="показать полностью"
+                android:textSize="18sp"
+                android:visibility="gone"
+                style="@style/Widget.Material3.Button.TextButton"
+                app:icon="@drawable/ic_expand_more"
+                app:iconSize="28dp"
+                app:iconGravity="textEnd"
+                app:iconPadding="8dp" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- Кнопки ответа -->
+    <LinearLayout
+        android:id="@+id/answerButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/dontKnowButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/red_500"
+            android:text="Не знаю"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/knowButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/green_500"
+            android:text="Знаю"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>

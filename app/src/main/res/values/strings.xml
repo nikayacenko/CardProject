@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Flashcards App</string>
+    <string name="decks">Decks</string>
+    <string name="cards">Cards</string>
+    <string name="create_deck">Create Deck</string>
+    <string name="create_card">Create Card</string>
+</resources>

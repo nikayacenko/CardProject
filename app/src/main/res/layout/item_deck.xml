@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="190dp"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Overlay для режима выбора -->
+        <View
+            android:id="@+id/selectionOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#60000000"
+            android:visibility="gone" />
+
+        <!-- Чекбокс выбора -->
+        <androidx.appcompat.widget.AppCompatCheckBox
+            android:id="@+id/selectionCheckbox"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="8dp"
+            android:background="@drawable/check_circle_selector"
+            android:button="@android:color/transparent"
+            android:visibility="gone" />
+
+        <!-- Контейнер для фиксированного расположения элементов - ВСЕГДА ВНИЗУ -->
+        <LinearLayout
+            android:id="@+id/fixedContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical">
+
+            <!-- Описание -->
+            <TextView
+                android:id="@+id/deckDescription"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:breakStrategy="simple"
+                tools:text="Формулы и теоремы для изучения" />
+
+            <!-- Теги -->
+            <TextView
+                android:id="@+id/tagsTextView"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                tools:text="математика, формулы, геометрия" />
+
+            <!-- Количество карточек -->
+            <TextView
+                android:id="@+id/cardCount"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:gravity="center_vertical"
+                tools:text="15 карточек" />
+
+        </LinearLayout>
+
+        <!-- Название колоды - занимает оставшееся пространство сверху -->
+        <TextView
+            android:id="@+id/deckName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_above="@id/fixedContent"
+            android:layout_toStartOf="@id/selectionCheckbox"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:textSize="22dp"
+            android:breakStrategy="simple"
+            tools:text="Математика" />
+
+    </RelativeLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="grid_spacing">8dp</dimen>
+    <dimen name="chip_stroke_width">1dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_margin">8dp</dimen>
+    <dimen name="info_icon_size">24dp</dimen>
+</resources>
