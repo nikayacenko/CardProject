@@ -216,7 +216,7 @@ class NoteListFragment : Fragment() {
         }
 
         val titleInput = EditText(requireContext()).apply {
-            hint = "Название конспекта"
+            hint = "Название конспекта *"
             setSingleLine(true)
         }
 
@@ -248,11 +248,11 @@ class NoteListFragment : Fragment() {
                 emptyList()
             }
 
-            if (title.isNotBlank() && content.isNotBlank()) {
+            if (title.isNotBlank()) {
                 viewModel.createNote(title, content, tagList)
                 Toast.makeText(requireContext(), "Конспект создан!", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(requireContext(), "Заполните название и содержание", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Введите название конспекта", Toast.LENGTH_SHORT).show()
             }
         }
 

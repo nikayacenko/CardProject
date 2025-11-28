@@ -15,20 +15,13 @@ class DeckStatsRepository @Inject constructor(
     private val deckDao: DeckDao
 ) {
 
-//    fun getDeckStats(deckId: Long): Flow<DeckStats> {
-//        return combine(
-//            cardDao.getCardsByDeck(deckId),
-//            sessionStatsDao.getSessionStatsByDeck(deckId)
-//        ) { cards, sessions ->
-//            calculateDeckStats(deckId, cards, sessions)
-//        }
-//    }
     suspend fun getAllDecksStatsSync(): List<DeckStats> {
         val decks = deckDao.getAllDecksSync()
         return decks.map { deck ->
             getDeckStatsSync(deck.id)
         }
     }
+
     suspend fun getDeckStatsSync(deckId: Long): DeckStats {
         val cards = cardDao.getCardsByDeckSync(deckId)
         val sessions = sessionStatsDao.getSessionStatsByDeckSync(deckId)
@@ -40,7 +33,6 @@ class DeckStatsRepository @Inject constructor(
     fun getAllDecksStats(): Flow<List<DeckStats>> {
         return deckDao.getAllDecks().map { decks ->
             decks.map { deck ->
-                // Для каждой колоды получаем синхронно статистику
                 getDeckStatsSync(deck.id)
             }
         }
@@ -54,10 +46,24 @@ class DeckStatsRepository @Inject constructor(
     ): DeckStats {
         val totalCards = cards.size
 
-        // Статистика по карточкам
-        val learnedCards = cards.count { it.reviewStage >= 3 && it.consecutiveCorrect >= 2 }
-        val inProgressCards = cards.count { it.reviewStage in 1..2 || (it.reviewStage >= 3 && it.consecutiveCorrect < 2) }
-        val newCards = cards.count { it.reviewStage == 0 && it.lastReviewed == null }
+        // ИСПРАВЛЕННАЯ ЛОГИКА СТАТИСТИКИ:
+
+        // Выученные карточки: 3+ правильных ответа подряд И stage >= 3
+        val learnedCards = cards.count {
+            it.consecutiveCorrect >= 3 && it.reviewStage >= 3
+        }
+
+        // Новые карточки: никогда не изучались (нет lastReviewed)
+        val newCards = cards.count {
+            it.lastReviewed == null
+        }
+
+        // Карточки в процессе: ВСЕ карточки, которые изучались хоть раз (есть lastReviewed),
+        // но еще не выучены (не соответствуют критериям learnedCards)
+        val inProgressCards = cards.count { card ->
+            card.lastReviewed != null && // изучалась хоть раз
+                    !(card.consecutiveCorrect >= 3 && card.reviewStage >= 3) // но еще не выучена
+        }
 
         // Статистика по сессиям
         val totalSessions = sessions.size
@@ -92,5 +98,4 @@ class DeckStatsRepository @Inject constructor(
             recentAccuracy = recentAccuracy
         )
     }
-
 }

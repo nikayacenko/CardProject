@@ -19,13 +19,13 @@ data class DeckStats(
 ) : Parcelable {
 
     val learnedPercentage: Double
-        get() = if (totalCards > 0) (learnedCards.toDouble() / totalCards * 100) else 0.0
+        get() = if (totalCards > 0) (learnedCards * 100.0) / totalCards else 0.0
 
     val inProgressPercentage: Double
-        get() = if (totalCards > 0) (inProgressCards.toDouble() / totalCards * 100) else 0.0
+        get() = if (totalCards > 0) (inProgressCards * 100.0) / totalCards else 0.0
 
     val newCardsPercentage: Double
-        get() = if (totalCards > 0) (newCards.toDouble() / totalCards * 100) else 0.0
+        get() = if (totalCards > 0) (newCards * 100.0) / totalCards else 0.0
 
     val formattedTotalTime: String
         get() = formatDuration(totalStudyTime)

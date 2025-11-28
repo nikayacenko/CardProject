@@ -76,7 +76,15 @@ class NoteAdapter(
 
             binding.noteTitle.text = note.title
             binding.noteDate.text = dateFormat.format(note.updatedAt)
-            binding.noteContent.text = note.content
+//            binding.noteContent.text = note.content
+
+            // Обрезаем содержание для отображения в карточке
+            val shortContent = if (note.content.length > 100) {
+                note.content.substring(0, 100) + "..."
+            } else {
+                note.content
+            }
+            binding.noteContent.text = shortContent
 
             // Отображение тегов
             if (noteWithTags.tags.isNotEmpty()) {

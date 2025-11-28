@@ -29,68 +29,67 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Поле названия -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/titleInputLayout"
+            <!-- Поле названия - БЕЗ TextInputLayout для полной ширины -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Название конспекта *"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/titleInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:hintEnabled="true"
-                app:hintAnimationEnabled="true">
+                android:background="@drawable/edit_text_background"
+                android:imeOptions="actionNext"
+                android:inputType="textCapSentences"
+                android:maxLines="2"
+                android:padding="16dp"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/titleInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Название конспекта"
-                    android:imeOptions="actionNext"
-                    android:inputType="textCapSentences"
-                    android:maxLines="1"
-                    android:textSize="18sp" />
+            <!-- Поле тегов - БЕЗ TextInputLayout -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Теги (через запятую)"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textStyle="bold" />
 
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Поле тегов -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tagsInputLayout"
+            <EditText
+                android:id="@+id/tagsInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:hintEnabled="true"
-                app:hintAnimationEnabled="true">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/tagsInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Теги (через запятую)"
-                    android:imeOptions="actionNext"
-                    android:maxLines="1" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+                android:background="@drawable/edit_text_background"
+                android:imeOptions="actionNext"
+                android:maxLines="1"
+                android:padding="16dp" />
 
             <!-- Поле содержания -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/contentInputLayout"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:hintEnabled="true"
-                app:hintAnimationEnabled="true"
-                app:counterEnabled="true"
-                app:counterMaxLength="5000">
+                android:layout_marginBottom="8dp"
+                android:text="Содержание конспекта"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textStyle="bold" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/contentInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Содержание конспекта"
-                    android:gravity="top"
-                    android:inputType="textMultiLine|textCapSentences"
-                    android:minHeight="200dp"
-                    android:scrollbars="vertical"
-                    android:textSize="16sp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+            <EditText
+                android:id="@+id/contentInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text_background"
+                android:gravity="top"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="500dp"
+                android:padding="16dp"
+                android:scrollbars="vertical"
+                android:textSize="16sp" />
 
         </LinearLayout>
 

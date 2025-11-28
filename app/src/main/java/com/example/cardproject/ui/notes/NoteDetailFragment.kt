@@ -1,4 +1,3 @@
-// NoteDetailFragment.kt
 package com.example.cardproject.ui.notes
 
 import android.os.Bundle
@@ -11,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.cardproject.R
 import com.example.cardproject.databinding.FragmentNoteDetailBinding
+import com.example.cardproject.model.NoteWithTags
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -22,6 +22,9 @@ class NoteDetailFragment : Fragment() {
     private val viewModel: NoteDetailViewModel by viewModels()
 
     private var noteId: Long = -1
+    private var hasUnsavedChanges = false
+    private var originalNote: NoteWithTags? = null
+    private var isDataLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +54,11 @@ class NoteDetailFragment : Fragment() {
 
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            if (hasUnsavedChanges) {
+                showUnsavedChangesDialog()
+            } else {
+                requireActivity().supportFragmentManager.popBackStack()
+            }
         }
 
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
@@ -73,38 +80,119 @@ class NoteDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.note.collect { noteWithTags ->
                 noteWithTags?.let {
-                    binding.titleInput.setText(it.note.title)
-                    binding.contentInput.setText(it.note.content)
-                    binding.tagsInput.setText(it.tags.joinToString(", "))
+                    if (!isDataLoaded) {
+                        // Первоначальная загрузка данных
+                        originalNote = noteWithTags
+                        binding.titleInput.setText(it.note.title)
+                        binding.contentInput.setText(it.note.content)
+                        binding.tagsInput.setText(it.tags.joinToString(", "))
+                        isDataLoaded = true
+                        hasUnsavedChanges = false
+                    } else {
+                        // Обновление данных после сохранения
+                        originalNote = noteWithTags
+                        hasUnsavedChanges = false
+                    }
                 }
             }
         }
     }
 
     private fun setupClickListeners() {
-        // Автосохранение при изменении текста
         binding.titleInput.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                autoSave()
+                checkForChanges()
             }
         }
 
         binding.contentInput.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                autoSave()
+                checkForChanges()
+            }
+        }
+
+        binding.tagsInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                checkForChanges()
+            }
+        }
+
+        binding.titleInput.addTextChangedListener(createTextWatcher())
+        binding.contentInput.addTextChangedListener(createTextWatcher())
+        binding.tagsInput.addTextChangedListener(createTextWatcher())
+    }
+
+    private fun createTextWatcher(): android.text.TextWatcher {
+        return object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                checkForChanges()
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        }
+    }
+
+    private fun checkForChanges() {
+        if (!isDataLoaded) return
+
+        val currentTitle = binding.titleInput.text?.toString()?.trim() ?: ""
+        val currentContent = binding.contentInput.text?.toString()?.trim() ?: ""
+        val currentTags = binding.tagsInput.text?.toString()?.trim() ?: ""
+        val currentTagsList = if (currentTags.isNotEmpty()) {
+            currentTags.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        } else {
+            emptyList()
+        }
+
+        val original = originalNote
+        hasUnsavedChanges = if (original != null) {
+            currentTitle != original.note.title ||
+                    currentContent != original.note.content ||
+                    currentTagsList.toSet() != original.tags.toSet()
+        } else {
+            currentTitle.isNotBlank() || currentContent.isNotBlank() || currentTagsList.isNotEmpty()
+        }
+    }
+
+    private fun saveNote() {
+        if (!isValidInput()) {
+            Toast.makeText(requireContext(), "Заполните название и содержание", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val currentData = getCurrentInputData()
+        viewModel.saveNote(currentData.title, currentData.content, currentData.tags)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Ждем обновления данных
+            kotlinx.coroutines.delay(300)
+            val updatedNote = viewModel.note.value
+            if (updatedNote != null) {
+                originalNote = updatedNote
+                hasUnsavedChanges = false
+                Toast.makeText(requireContext(), "Конспект сохранен!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun autoSave() {
-        if (isValidInput()) {
-            saveNote(false) // Тихий режим без Toast
+    private fun performSaveAndExit() {
+        if (!isValidInput()) {
+            Toast.makeText(requireContext(), "Заполните название и содержание", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val currentData = getCurrentInputData()
+        viewModel.saveNote(currentData.title, currentData.content, currentData.tags)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Даем время на сохранение перед выходом
+            kotlinx.coroutines.delay(300)
+            Toast.makeText(requireContext(), "Конспект сохранен!", Toast.LENGTH_SHORT).show()
+            requireActivity().supportFragmentManager.popBackStack()
         }
     }
 
-    private fun saveNote(showToast: Boolean = true) {
-        if (!isValidInput()) return
-
+    private fun getCurrentInputData(): CurrentInputData {
         val title = binding.titleInput.text.toString().trim()
         val content = binding.contentInput.text.toString().trim()
         val tags = binding.tagsInput.text.toString().trim()
@@ -115,11 +203,7 @@ class NoteDetailFragment : Fragment() {
             emptyList()
         }
 
-        viewModel.saveNote(title, content, tagList)
-
-        if (showToast) {
-            Toast.makeText(requireContext(), "Конспект сохранен!", Toast.LENGTH_SHORT).show()
-        }
+        return CurrentInputData(title, content, tagList)
     }
 
     private fun deleteNote() {
@@ -135,13 +219,33 @@ class NoteDetailFragment : Fragment() {
             .show()
     }
 
+    private fun showUnsavedChangesDialog() {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Несохраненные изменения")
+            .setMessage("У вас есть несохраненные изменения. Сохранить перед выходом?")
+            .setPositiveButton("Сохранить") { _, _ ->
+                performSaveAndExit()
+            }
+            .setNegativeButton("Не сохранять") { _, _ ->
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+            .setNeutralButton("Отмена", null)
+            .show()
+    }
+
     private fun isValidInput(): Boolean {
-        return binding.titleInput.text.toString().trim().isNotBlank() &&
-                binding.contentInput.text.toString().trim().isNotBlank()
+        return binding.titleInput.text.toString().trim().isNotBlank()
+
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
+    private data class CurrentInputData(
+        val title: String,
+        val content: String,
+        val tags: List<String>
+    )
 }

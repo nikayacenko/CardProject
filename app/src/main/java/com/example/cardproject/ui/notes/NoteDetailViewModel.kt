@@ -31,19 +31,34 @@ class NoteDetailViewModel @Inject constructor(
 
     fun saveNote(title: String, content: String, tags: List<String>) {
         viewModelScope.launch {
-            val currentNote = _note.value
-            if (currentNote != null) {
-                // Обновляем существующий конспект
-                val updatedNote = currentNote.note.copy(
-                    title = title,
-                    content = content,
-                    updatedAt = System.currentTimeMillis()
-                )
-                noteRepository.updateNote(updatedNote, tags)
-                _note.value = NoteWithTags(updatedNote, tags)
-            } else {
-                // Создаем новый конспект (на случай если что-то пошло не так)
-                noteRepository.createNote(title, content, tags)
+            try {
+                val currentNote = _note.value
+                if (currentNote != null) {
+                    // Обновляем существующий конспект
+                    val updatedNote = currentNote.note.copy(
+                        title = title,
+                        content = content,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    noteRepository.updateNote(updatedNote, tags)
+                    // Немедленно обновляем состояние
+                    _note.value = NoteWithTags(updatedNote, tags)
+                } else if (currentNoteId != -1L) {
+                    // Запасной вариант: загружаем заново и обновляем
+                    val existingNote = noteRepository.getNoteById(currentNoteId)
+                    if (existingNote != null) {
+                        val updatedNote = existingNote.note.copy(
+                            title = title,
+                            content = content,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        noteRepository.updateNote(updatedNote, tags)
+                        _note.value = NoteWithTags(updatedNote, tags)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Можно добавить обработку ошибок
             }
         }
     }
