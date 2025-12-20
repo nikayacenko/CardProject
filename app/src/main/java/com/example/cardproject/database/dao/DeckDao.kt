@@ -30,5 +30,7 @@ interface DeckDao {
     @Query("SELECT * FROM decks WHERE id = :deckId")
     suspend fun getDeckByIdSync(deckId: Long): Deck?
 
+    @Query("DELETE FROM decks")
+    suspend fun deleteAllDecks()
 }
 

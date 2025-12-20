@@ -32,5 +32,7 @@ interface CardDao {
     @Query("SELECT * FROM cards WHERE id = :cardId")
     suspend fun getCardById(cardId: Long): Card?
 
+    @Query("DELETE FROM cards")
+    suspend fun deleteAllCards()
 
 }

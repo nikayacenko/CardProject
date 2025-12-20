@@ -75,6 +75,11 @@ class CardListFragment : Fragment() {
         binding.toolbar.menu.clear()
         binding.toolbar.title = deckName
 
+        // Восстанавливаем стандартную иконку навигации
+        binding.toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
+        binding.toolbar.setNavigationOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
         // Устанавливаем основное меню
         binding.toolbar.inflateMenu(R.menu.menu_card_list)
 
