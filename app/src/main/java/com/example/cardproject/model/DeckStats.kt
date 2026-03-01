@@ -15,7 +15,14 @@ data class DeckStats(
     val totalStudyTime: Long,
     val averageAccuracy: Double,
     val cardsByStatus: Map<CardStatus, Int>,
-    val recentAccuracy: List<Double> // Последние 10 сессий
+    val recentAccuracy: List<Double>, // Последние 10 сессий
+
+    val averageDifficulty: Float,       // Средняя сложность колоды по версии ИИ
+    val averageResponseTimeMs: Long,    // Базовая скорость ответа для этой колоды
+    val conceptualMastery: Float,       // Процент усвоения связей (графа)
+    val orphanCardsCount: Int,          // Сколько карт еще не связаны ни с чем
+    val totalReviewsCount: Int,         // Общее кол-во подходов (для расчета опыта)
+    val responseTimeTrend: List<Long>   // История времени ответов для графика усталости
 ) : Parcelable {
 
     val learnedPercentage: Double
@@ -43,10 +50,25 @@ data class DeckStats(
             "${seconds}с"
         }
     }
+
+    // Оценка "силы" знаний в колоде (от 0 до 100)
+    val knowledgeStrength: Int
+        get() = ((learnedPercentage * 0.7) + (conceptualMastery * 100 * 0.3)).toInt()
+
+    // Рекомендация ИИ по объему следующей сессии
+    val recommendedSessionSize: Int
+        get() = when {
+            averageDifficulty > 0.7f -> 15 // Колода сложная, не перегружаем
+            averageAccuracy < 60.0 -> 20   // Много ошибок, уменьшаем объем
+            else -> 40                     // Всё хорошо, можно учить много
+        }
+
 }
+
 
 enum class CardStatus {
     NEW, // Новые (reviewStage = 0)
     IN_PROGRESS, // В процессе (1 <= reviewStage < 3)
-    LEARNED // Выученные (reviewStage >= 3)
+    LEARNED, // Выученные (reviewStage >= 3)
+    LOCKED // Карточка заблокирована (граф), так как не выучены "предки"
 }

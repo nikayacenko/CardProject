@@ -47,6 +47,9 @@ android {
         viewBinding = true
     }
 
+    androidResources {
+        noCompress += "tflite"
+    }
 
 }
 
@@ -91,6 +94,11 @@ dependencies {
 
     // Kotlin Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
 }
 
 kapt {
