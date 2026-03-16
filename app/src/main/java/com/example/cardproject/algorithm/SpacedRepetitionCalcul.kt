@@ -47,7 +47,7 @@ object SpacedRepetitionCalcul {
 
         return card.copy(
             reviewStage = nextStage,
-            interval = intervals[nextStage],
+            interval = intervals[nextStage].toDouble(),
             nextReview = nextReviewTime,
             easeFactor = max(1.3, card.easeFactor + (0.1 - (5 - 1) * (0.08 + (5 - 1) * 0.02)))
         )
@@ -56,7 +56,7 @@ object SpacedRepetitionCalcul {
     private fun resetCard(card: Card, learningMode: LearningMode): Card {
         return card.copy(
             reviewStage = max(0, card.reviewStage - 1),
-            interval = 1,
+            interval = 1.0,
             nextReview = System.currentTimeMillis(), // Сразу доступна для повторения
             easeFactor = max(1.3, card.easeFactor - 0.1),
             consecutiveCorrect = 0

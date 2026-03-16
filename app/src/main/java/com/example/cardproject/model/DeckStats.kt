@@ -22,7 +22,7 @@ data class DeckStats(
     val conceptualMastery: Float,       // Процент усвоения связей (графа)
     val orphanCardsCount: Int,          // Сколько карт еще не связаны ни с чем
     val totalReviewsCount: Int,         // Общее кол-во подходов (для расчета опыта)
-    val responseTimeTrend: List<Long>   // История времени ответов для графика усталости
+    val responseTimeTrend: Float   // История времени ответов для графика усталости
 ) : Parcelable {
 
     val learnedPercentage: Double

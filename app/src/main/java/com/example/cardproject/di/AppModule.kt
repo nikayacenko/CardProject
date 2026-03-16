@@ -5,11 +5,14 @@ import com.example.cardproject.database.AppDatabase
 import com.example.cardproject.database.dao.CardDao
 import com.example.cardproject.database.dao.DeckDao
 import com.example.cardproject.database.dao.NoteDao
+import com.example.cardproject.database.dao.ReviewLogDao
 import com.example.cardproject.database.dao.SessionStatsDao
 import com.example.cardproject.database.dao.TagDao
 import com.example.cardproject.database.repository.CardRepository
 import com.example.cardproject.database.repository.DeckRepository
+import com.example.cardproject.database.repository.DeckStatsRepository
 import com.example.cardproject.database.repository.NoteRepository
+import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.database.repository.SessionStatsRepository
 import dagger.Module
 import dagger.Provides
@@ -84,7 +87,26 @@ object AppModule {
     }
 
 
+    @Provides
+    @Singleton
+    fun provideReviewLogDao(database: AppDatabase): ReviewLogDao = database.reviewLogDao()
+    @Provides
+    @Singleton
+    fun provideDeckStatsRepository(
+        deckDao: com.example.cardproject.database.dao.DeckDao,
+        cardDao: com.example.cardproject.database.dao.CardDao,
+        sessionStatsDao: com.example.cardproject.database.dao.SessionStatsDao,
+        reviewLogDao: com.example.cardproject.database.dao.ReviewLogDao  // Добавили
+    ): DeckStatsRepository {
+        return DeckStatsRepository(deckDao, cardDao, sessionStatsDao, reviewLogDao)
+    }
 
-
+    @Provides
+    @Singleton
+    fun provideReviewLogRepository(
+        reviewLogDao: com.example.cardproject.database.dao.ReviewLogDao
+    ): ReviewLogRepository {
+        return ReviewLogRepository(reviewLogDao)
+    }
 
 }

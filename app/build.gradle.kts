@@ -4,8 +4,9 @@ plugins {
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("androidx.navigation.safeargs.kotlin")
-    id ("org.jetbrains.kotlin.plugin.serialization")
-    id ("kotlin-parcelize")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("kotlin-parcelize")
+    id("com.chaquo.python")
 }
 
 android {
@@ -21,7 +22,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-
+        ndk {
+            abiFilters += listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
+        }
     }
 
     buildTypes {
@@ -45,39 +48,44 @@ android {
 
     buildFeatures {
         viewBinding = true
+        dataBinding = true
     }
 
     androidResources {
         noCompress += "tflite"
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     // Базовые зависимости Android
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.8.0")
+    implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.activity:activity-ktx:1.7.2")
+    implementation("androidx.activity:activity-ktx:1.8.0")
 
-    // Room
+    // Room (совместимая версия)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.ui.graphics.android)
     kapt("androidx.room:room-compiler:2.6.1")
 
-    // Hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
-    
+    // Hilt (без дубликатов)
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
 
-    // ViewModel
+    // ViewModel & Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
@@ -85,22 +93,64 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Material Design
-    implementation("com.google.android.material:material:1.11.0")
-
-    // Navigation
-//    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
-//    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
-
     // Kotlin Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
+    // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-    implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
+
+    // Для экспорта CSV
+    implementation("org.apache.commons:commons-csv:1.10.0")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // JUnit
+    testImplementation("junit:junit:4.13.2")
+
+    // Coroutines тесты
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // MockK (для моков - альтернатива Mockito)
+    testImplementation("io.mockk:mockk:1.13.8")
+
+    // Android Architecture Components тесты
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+
+    // Robolectric (для тестов с Android-зависимостями)
+    testImplementation("org.robolectric:robolectric:4.11")
+
+    // AssertJ (удобные assertions)
+    testImplementation("org.assertj:assertj-core:3.24.2")
+
+    // Turbine (для тестирования Flow)
+    testImplementation("app.cash.turbine:turbine:1.0.0")
+
+    // Kotlin тесты
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.9.0")
+
+    // MockK для Android (если нужны моки Android-компонентов)
+    testImplementation("io.mockk:mockk-android:1.13.8")
+
+    // Для тестирования ViewModel с Hilt (опционально)
+    testImplementation("com.google.dagger:hilt-android-testing:2.51.1")
+    kaptTest("com.google.dagger:hilt-compiler:2.51.1")
+
+    testImplementation("org.tensorflow:tensorflow-lite:2.14.0")
+
+    // ============ ANDROID ТЕСТЫ ============
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+
+    // Для тестирования Room
+    testImplementation("androidx.room:room-testing:2.6.1")
 }
 
 kapt {
     correctErrorTypes = true
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }

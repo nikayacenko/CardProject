@@ -1,10 +1,22 @@
 package com.example.cardproject.model
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "cards")
+@Entity(tableName = "cards",
+    foreignKeys = [
+        ForeignKey(
+            entity = Deck::class,
+            parentColumns = ["id"],
+            childColumns = ["deckId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("deckId"), Index("nextReview")]
+)
 data class Card(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -15,7 +27,7 @@ data class Card(
     var lastReviewed: Long? = null,
     var nextReview: Long? = null,
     var easeFactor: Double = 2.5,
-    var interval: Int = 1,
+    var interval: Double = 1.0,
     var reviewStage: Int = 0, // 0 - новая, 1-4 - этапы повторения
     var consecutiveCorrect: Int = 0, // последовательные правильные ответы
 

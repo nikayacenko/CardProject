@@ -96,4 +96,7 @@
     <color name="gray_600">#FF757575</color>
     <color name="gray_700">#FF616161</color>
 
+
+    <color name="background_light">#F5F5F5</color>
+
 </resources>

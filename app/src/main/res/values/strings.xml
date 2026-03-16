@@ -4,4 +4,5 @@
     <string name="cards">Cards</string>
     <string name="create_deck">Create Deck</string>
     <string name="create_card">Create Card</string>
+    <string name="navigate_back">Назад</string>
 </resources>

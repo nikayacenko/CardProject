@@ -3,12 +3,16 @@ package com.example.cardproject.ui.learning
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardproject.algorithm.LearningProgress
-import com.example.cardproject.algorithm.SpacedRepetitionCalcul
 import com.example.cardproject.database.repository.CardRepository
 import com.example.cardproject.database.repository.DeckRepository
+import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.database.repository.SessionStatsRepository
+import com.example.cardproject.ml.MLSpacedRepetitionCalculator
+import com.example.cardproject.ml.TensorFlowLiteModel
+import com.example.cardproject.model.AIContext
 import com.example.cardproject.model.Card
 import com.example.cardproject.model.LearningMode
+import com.example.cardproject.model.ReviewLog
 import com.example.cardproject.model.SessionStats
 import com.example.cardproject.model.SessionType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,21 +26,20 @@ import javax.inject.Inject
 class LearningViewModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val deckRepository: DeckRepository,
-    private val sessionStatsRepository: SessionStatsRepository
+    private val sessionStatsRepository: SessionStatsRepository,
+    private val reviewLogRepository: ReviewLogRepository,
+    private val mlCalculator: MLSpacedRepetitionCalculator,
+    private val tfliteModel: TensorFlowLiteModel
 ) : ViewModel() {
 
     private var deckId: Long = -1
-    private var learningMode: LearningMode = LearningMode.LONG_TERM
+    private var deckName: String = ""
     private var dueCards: List<Card> = emptyList()
     private var currentCardIndex = 0
-    private var totalCards: Int = 0
     private var startTime: Long = 0
-    private var correctAnswers = 0
-    private var wrongAnswers = 0
-    private var deckName: String = ""
 
-    // Храним временные ответы (не сохраняем в БД до завершения сессии)
-    private val temporaryAnswers = mutableMapOf<Long, Int>() // cardId to quality
+    // Результаты только для статистики текущей сессии
+    private val sessionResults = mutableListOf<Pair<Boolean, Long>>()
 
     private val _currentCard = MutableStateFlow<Card?>(null)
     val currentCard: StateFlow<Card?> = _currentCard.asStateFlow()
@@ -47,145 +50,113 @@ class LearningViewModel @Inject constructor(
     private val _isFinished = MutableStateFlow(false)
     val isFinished: StateFlow<Boolean> = _isFinished.asStateFlow()
 
-    fun setDeckId(deckId: Long, learningMode: LearningMode) {
+    private val _sessionContext = MutableStateFlow(AIContext.create())
+    val sessionContext: StateFlow<AIContext> = _sessionContext.asStateFlow()
+
+    private val _isMLReady = MutableStateFlow(false)
+    val isMLReady: StateFlow<Boolean> = _isMLReady.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _isMLReady.value = tfliteModel.isModelReady.value
+        }
+    }
+
+    fun setDeckId(deckId: Long, mode: LearningMode) {
         this.deckId = deckId
-        this.learningMode = learningMode
         this.startTime = System.currentTimeMillis()
-        this.correctAnswers = 0
-        this.wrongAnswers = 0
-        this.temporaryAnswers.clear()
-        loadDeckName()
-        loadDueCards()
+        _sessionContext.value = AIContext.create(learningMode = mode)
+        loadDeckData()
     }
 
-    private fun loadDeckName() {
+    private fun loadDeckData() {
         viewModelScope.launch {
-            deckRepository.getDeckById(deckId)?.let { deck ->
-                deckName = deck.name
-            }
-        }
-    }
-
-    private fun loadDueCards() {
-        viewModelScope.launch {
-            // Загружаем карточки для повторения (исключая временно отвеченные)
-            val allDueCards = cardRepository.getCardsDueForReview(deckId)
-
-            // Исключаем карточки, на которые уже дали временные ответы в этой сессии
-            dueCards = allDueCards.filter { card ->
-                !temporaryAnswers.containsKey(card.id)
-            }
-
-            totalCards = dueCards.size
+            deckRepository.getDeckById(deckId)?.let { deckName = it.name }
+            dueCards = cardRepository.getCardsDueForReview(deckId)
             updateProgress()
-
             if (dueCards.isNotEmpty()) {
-                currentCardIndex = 0
                 _currentCard.value = dueCards[currentCardIndex]
-            } else {
-                _currentCard.value = null
             }
         }
     }
 
-    fun getTotalCount(): Int {
-        return totalCards
-    }
-
-    fun answerCard(quality: Int) {
+    fun answerCard(card: Card, quality: Int, responseTimeMs: Long) {
         viewModelScope.launch {
-            val currentCard = _currentCard.value ?: return@launch
+            val context = _sessionContext.value
 
-            // Сохраняем временный ответ (НЕ обновляем в БД)
-            temporaryAnswers[currentCard.id] = quality
+            // 1. МГНОВЕННОЕ СОХРАНЕНИЕ ПРОГРЕССА КАРТОЧКИ
+            val updatedCard = mlCalculator.calculateNextReview(
+                card, context, context.learningMode, quality, responseTimeMs
+            )
+            cardRepository.updateCard(updatedCard)
 
-            // Обновляем счетчики для отображения
-            if (quality == 1) {
-                correctAnswers++
-            } else {
-                wrongAnswers++
-            }
+            // 2. СОХРАНЕНИЕ ЛОГА (ДЛЯ ОБУЧЕНИЯ МОДЕЛИ)
+            val log = ReviewLog.from(card, context, quality, responseTimeMs, 0.5f, card.successRate)
+            reviewLogRepository.insertLog(log)
 
-            // Переходим к следующей карточке
+            // 3. ДОБАВЛЕНИЕ В СТАТИСТИКУ СЕССИИ
+            sessionResults.add((quality == 1) to responseTimeMs)
+
+            // 4. ОБНОВЛЕНИЕ КОНТЕКСТА И ПЕРЕХОД
+            _sessionContext.value = context.updateWithReview(quality == 1, responseTimeMs)
+
             currentCardIndex++
-
             if (currentCardIndex < dueCards.size) {
                 _currentCard.value = dueCards[currentCardIndex]
             } else {
-                // Сессия завершена - сохраняем ВСЕ в БД
-                saveAllToDatabase()
-                _isFinished.value = true
+                finishSession() // Автоматическое завершение
             }
-
             updateProgress()
         }
     }
 
-    private suspend fun saveAllToDatabase() {
-        // 1. Обновляем все карточки в БД с временными ответами
-        temporaryAnswers.forEach { (cardId, quality) ->
-            val card = cardRepository.getCardById(cardId)
-            card?.let {
-                // Используем SpacedRepetitionCalcul напрямую
-                val updatedCard = SpacedRepetitionCalcul.calculateNextReview(it, learningMode, quality)
-                cardRepository.updateCard(updatedCard)
-            }
-        }
-
-        // 2. Сохраняем статистику сессии
-        val sessionDuration = System.currentTimeMillis() - startTime
-        val totalAnswered = correctAnswers + wrongAnswers
-
-        if (totalAnswered > 0) {
-            val stats = SessionStats(
-                deckId = deckId,
-                deckName = deckName,
-                sessionType = SessionType.SPACED_REPETITION,
-                totalCards = totalAnswered,
-                correctAnswers = correctAnswers,
-                wrongAnswers = wrongAnswers,
-                sessionDuration = sessionDuration,
-                learningMode = learningMode
-            )
-
-            sessionStatsRepository.saveSessionStats(stats)
+    fun finishSession() {
+        viewModelScope.launch {
+            saveSessionStats()
+            _isFinished.value = true
         }
     }
 
-    // При досрочном выходе просто очищаем временные ответы
-    fun cancelSession() {
-        temporaryAnswers.clear()
-        correctAnswers = 0
-        wrongAnswers = 0
+    fun abandonSession() {
+        // Прогресс карточек уже в БД, просто не создаем запись SessionStats
+        sessionResults.clear()
+        _isFinished.value = true
     }
 
-    fun getAnsweredCardsCount(): Int {
-        return correctAnswers + wrongAnswers
-    }
+    private suspend fun saveSessionStats() {
+        if (sessionResults.isEmpty()) return
 
-    fun getRemainingCount(): Int {
-        return dueCards.size - currentCardIndex
+        val correct = sessionResults.count { it.first }
+        val stats = SessionStats(
+            deckId = deckId,
+            deckName = deckName,
+            sessionType = SessionType.SPACED_REPETITION,
+            totalCards = sessionResults.size,
+            correctAnswers = correct,
+            wrongAnswers = sessionResults.size - correct,
+            sessionDuration = System.currentTimeMillis() - startTime,
+            learningMode = _sessionContext.value.learningMode
+        )
+        sessionStatsRepository.saveSessionStats(stats)
     }
 
     private suspend fun updateProgress() {
-        // Используем оригинальный прогресс (без временных ответов)
-        val progress = cardRepository.getLearningProgress(deckId)
-        _learningProgress.value = progress
+        _learningProgress.value = cardRepository.getLearningProgress(deckId)
     }
 
+    fun getAnsweredCount() = sessionResults.size
+    fun getTotalCount() = dueCards.size
     fun getCurrentSessionStats(): SessionStats {
-        val sessionDuration = System.currentTimeMillis() - startTime
-        val totalCards = correctAnswers + wrongAnswers
-
+        val correct = sessionResults.count { it.first }
         return SessionStats(
             deckId = deckId,
             deckName = deckName,
             sessionType = SessionType.SPACED_REPETITION,
-            totalCards = totalCards,
-            correctAnswers = correctAnswers,
-            wrongAnswers = wrongAnswers,
-            sessionDuration = sessionDuration,
-            learningMode = learningMode
+            totalCards = sessionResults.size,
+            correctAnswers = correct,
+            wrongAnswers = sessionResults.size - correct,
+            sessionDuration = System.currentTimeMillis() - startTime,
+            learningMode = _sessionContext.value.learningMode
         )
     }
 }

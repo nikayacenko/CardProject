@@ -1,0 +1,33 @@
+{
+  "decks": [
+    {
+      "name": "Английский язык - 20 слов",
+      "description": "Базовый словарный запас",
+      "coverColor": "#4285F4",
+      "learningMode": "LONG_TERM",
+      "tags": ["английский", "слова"],
+      "cards": [
+        {"front": "Hello", "back": "Привет"},
+        {"front": "Goodbye", "back": "До свидания"},
+        {"front": "Thank you", "back": "Спасибо"},
+        {"front": "Please", "back": "Пожалуйста"},
+        {"front": "Yes", "back": "Да"},
+        {"front": "No", "back": "Нет"},
+        {"front": "Cat", "back": "Кошка"},
+        {"front": "Dog", "back": "Собака"},
+        {"front": "House", "back": "Дом"},
+        {"front": "Car", "back": "Машина"},
+        {"front": "Food", "back": "Еда"},
+        {"front": "Go", "back": "Идти"},
+        {"front": "Come", "back": "Приходить"},
+        {"front": "See", "back": "Видеть"},
+        {"front": "Want", "back": "Хотеть"},
+        {"front": "Have", "back": "Иметь"},
+        {"front": "Good", "back": "Хороший"},
+        {"front": "Bad", "back": "Плохой"},
+        {"front": "Big", "back": "Большой"},
+        {"front": "Small", "back": "Маленький"}
+      ]
+    }
+  ]
+}

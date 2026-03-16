@@ -44,8 +44,10 @@ import androidx.fragment.app.replace
 import com.example.cardproject.model.LearningMode
 import com.example.cardproject.model.NavigationSource
 import com.example.cardproject.ui.info.LearningModesInfoFragment
+import com.example.cardproject.ui.info.SettingsFragment
 import com.example.cardproject.ui.notes.NoteListFragment
 import com.example.cardproject.ui.stats.StatsFragment
+import com.example.cardproject.utils.DataImporter
 import com.example.cardproject.utils.TagColorHelper
 import com.google.android.material.chip.Chip
 
@@ -81,8 +83,24 @@ class DeckListFragment : Fragment() {
         setupClickListeners()
         setupSearchView()
         setupTagFiltering()
+
+        // Долгое нажатие на FAB для импорта
+        binding.fabCreateDeck.setOnLongClickListener {
+            importSampleData()
+            true
+        }
     }
 
+    private fun importSampleData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val importer = DataImporter(requireContext())
+            val result = importer.importSampleData()
+            Toast.makeText(requireContext(), result, Toast.LENGTH_LONG).show()
+
+            // Обновляем список
+            viewModel.refreshData()
+        }
+    }
     private fun setupToolbar() {
         // Начальная настройка - обычный режим
         showNormalMode()
@@ -167,6 +185,10 @@ class DeckListFragment : Fragment() {
                     openNotes()
                     true
                 }
+                R.id.menu_settings -> {
+                    openSettings()
+                    true
+                }
 
                 else -> false
             }
@@ -180,6 +202,14 @@ class DeckListFragment : Fragment() {
         requireActivity().supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, noteListFragment)
             .addToBackStack("deck_list")
+            .commit()
+    }
+    private fun openSettings(){
+        val settingsListFragment = SettingsFragment()
+
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, settingsListFragment)
+            .addToBackStack("settings_list")
             .commit()
     }
 

@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.cardproject.database.dao.CardDao
 import com.example.cardproject.database.dao.DeckDao
 import com.example.cardproject.database.dao.NoteDao
+import com.example.cardproject.database.dao.ReviewLogDao
 import com.example.cardproject.database.dao.SessionStatsDao
 import com.example.cardproject.database.dao.TagDao
 import com.example.cardproject.model.Deck
@@ -14,6 +15,7 @@ import com.example.cardproject.model.Card
 import com.example.cardproject.model.Note
 import com.example.cardproject.model.SessionStats
 import com.example.cardproject.model.Tag
+import com.example.cardproject.model.ReviewLog
 
 @Database(
     entities = [
@@ -21,9 +23,10 @@ import com.example.cardproject.model.Tag
         Card::class,
         Tag::class,
         SessionStats::class,
-        Note::class
+        Note::class,
+        ReviewLog::class
     ],
-    version = 10, // УВЕЛИЧЬТЕ ВЕРСИЮ ДО 7
+    version = 11, // УВЕЛИЧЬТЕ ВЕРСИЮ ДО 7
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +35,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun sessionStatsDao(): SessionStatsDao
     abstract fun noteDao(): NoteDao
+
+    abstract fun reviewLogDao(): ReviewLogDao
 
     companion object {
         @Volatile

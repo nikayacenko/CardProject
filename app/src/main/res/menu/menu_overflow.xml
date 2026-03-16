@@ -18,6 +18,11 @@
         android:title="Мои конспекты"
         android:icon="@drawable/ic_note" />
 
+    <item
+        android:id="@+id/menu_settings"
+        android:title="Настройки"
+        android:icon="@drawable/ic_settings_24dp"
+        app:showAsAction="never" />
 <!--    <item-->
 <!--        android:id="@+id/menu_notes"-->
 <!--        android:icon="@drawable/ic_notes"-->

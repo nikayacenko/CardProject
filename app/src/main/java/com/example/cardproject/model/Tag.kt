@@ -3,6 +3,7 @@ package com.example.cardproject.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "tag",
@@ -18,6 +19,10 @@ import androidx.room.ForeignKey
             childColumns = ["noteId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["deckId"]),  // Добавить индекс для внешнего ключа
+        Index(value = ["noteId"])   // Добавить индекс для внешнего ключа
     ]
 )
 data class Tag(
