@@ -76,18 +76,31 @@ class DeckListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        try {
+            setupToolbar()
+            println("✅ Toolbar setup done")
 
-        setupToolbar()
-        setupRecyclerView()
-        setupObservers()
-        setupClickListeners()
-        setupSearchView()
-        setupTagFiltering()
+            setupRecyclerView()
+            println("✅ RecyclerView setup done")
 
-        // Долгое нажатие на FAB для импорта
-        binding.fabCreateDeck.setOnLongClickListener {
-            importSampleData()
-            true
+            setupObservers()
+            println("✅ Observers setup done")
+
+            setupClickListeners()
+            println("✅ Click listeners setup done")
+
+            setupSearchView()
+            println("✅ Search view setup done")
+
+            setupTagFiltering()
+            println("✅ Tag filtering setup done")
+
+            println("🎉 DeckListFragment: ALL GOOD")
+
+        } catch (e: Exception) {
+            println("❌ DeckListFragment: ERROR")
+            println("❌ ${e.message}")
+            e.printStackTrace()
         }
     }
 

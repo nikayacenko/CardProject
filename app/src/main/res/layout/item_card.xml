@@ -9,16 +9,48 @@
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp">
 
-    <!-- FrameLayout для наложения overlay поверх всего -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <!-- ОСНОВНОЙ КОНТЕЙНЕР С КОНТЕНТОМ -->
         <RelativeLayout
+            android:id="@+id/cardContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp">
+
+            <!-- ТАЙМЕР В ПРАВОМ ВЕРХНЕМ УГЛУ -->
+            <LinearLayout
+                android:id="@+id/timerLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/timer_background"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/timerIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:text="⏰"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/timerText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30 сек"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
 
             <!-- ВСПЛЫВАЮЩАЯ ПОДСКАЗКА -->
             <include
@@ -36,43 +68,26 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_below="@+id/timerLayout"
+                android:layout_marginTop="4dp">
 
-                <!-- Верхняя строка: вопрос и иконка выученности -->
-                <RelativeLayout
+                <!-- Верхняя строка: вопрос -->
+                <TextView
+                    android:id="@+id/cardFront"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:id="@+id/cardFront"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_toStartOf="@+id/learnedIcon"
-                        android:text="Вопрос"
-                        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                        android:textStyle="bold" />
-
-                    <!-- Иконка выученности -->
-                    <ImageView
-                        android:id="@+id/learnedIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="Статус изучения карточки"
-                        android:src="@drawable/ic_learned"
-                        android:visibility="gone"
-                        android:padding="2dp" />
-
-                </RelativeLayout>
+                    android:text="Вопрос"
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                    android:textStyle="bold"
+                    android:paddingEnd="32dp" />
 
                 <!-- Разделитель -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#E0E0E0"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginVertical="12dp" />
 
                 <!-- Ответ -->
                 <TextView
@@ -96,9 +111,22 @@
 
             </LinearLayout>
 
+            <!-- Иконка выученности (перенесена в правый верхний угол) -->
+            <ImageView
+                android:id="@+id/learnedIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Статус изучения карточки"
+                android:src="@drawable/ic_learned"
+                android:visibility="gone"
+                android:padding="2dp" />
+
         </RelativeLayout>
 
-        <!-- OVERLAY ДОЛЖЕН БЫТЬ В FrameLayout И НАКРЫВАТЬ ВСЮ КАРТОЧКУ -->
+        <!-- OVERLAY ДЛЯ ВЫДЕЛЕНИЯ -->
         <View
             android:id="@+id/selectionOverlay"
             android:layout_width="match_parent"

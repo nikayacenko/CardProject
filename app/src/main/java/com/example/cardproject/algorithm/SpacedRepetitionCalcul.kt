@@ -36,28 +36,37 @@ object SpacedRepetitionCalcul {
         }
 
         val currentStage = card.reviewStage
-        val nextStage = minOf(currentStage + 1, intervals.size - 1)
+        val currentIntervalValue = intervals[minOf(currentStage, intervals.size - 1)]
 
-        val interval = when (learningMode) {
-            LearningMode.LONG_TERM -> intervals[nextStage] * 24 * 60 * 60 * 1000L // дни в миллисекунды
-            LearningMode.SHORT_TERM -> intervals[nextStage] * 60 * 60 * 1000L // часы в миллисекунды
+        val intervalMillis = when (learningMode) {
+            LearningMode.LONG_TERM -> currentIntervalValue * 24 * 60 * 60 * 1000L  // дни → мс
+            LearningMode.SHORT_TERM -> currentIntervalValue * 60 * 60 * 1000L      // часы → мс
         }
 
-        val nextReviewTime = System.currentTimeMillis() + interval
+        val nextReviewTime = System.currentTimeMillis() + intervalMillis
+        val nextStage = minOf(currentStage + 1, intervals.size - 1)
 
         return card.copy(
             reviewStage = nextStage,
-            interval = intervals[nextStage].toDouble(),
+            interval = currentIntervalValue.toDouble(),
             nextReview = nextReviewTime,
             easeFactor = max(1.3, card.easeFactor + (0.1 - (5 - 1) * (0.08 + (5 - 1) * 0.02)))
         )
     }
 
     private fun resetCard(card: Card, learningMode: LearningMode): Card {
+        val newInterval = when (learningMode) {
+            LearningMode.LONG_TERM -> 1.0
+            LearningMode.SHORT_TERM -> 1.0  // 1 час
+        }
+        val intervalMillis = when (learningMode) {
+            LearningMode.LONG_TERM -> (newInterval * 24 * 60 * 60 * 1000L).toLong()
+            LearningMode.SHORT_TERM -> (newInterval * 60 * 60 * 1000L).toLong()
+        }
         return card.copy(
             reviewStage = max(0, card.reviewStage - 1),
             interval = 1.0,
-            nextReview = System.currentTimeMillis(), // Сразу доступна для повторения
+            nextReview = System.currentTimeMillis()+ intervalMillis, // Сразу доступна для повторения
             easeFactor = max(1.3, card.easeFactor - 0.1),
             consecutiveCorrect = 0
         )

@@ -13,20 +13,15 @@ class CardRepository @Inject constructor(
 ) {
 
     init {
-        println("✅ CardRepository создан с cardDao: ${cardDao != null}")
+        println("CardRepository создан с cardDao: ${cardDao != null}")
     }
     fun getCardsByDeck(deckId: Long): Flow<List<Card>> {
-        println("🔄 Запрос карточек для колоды: $deckId")
         return cardDao.getCardsByDeck(deckId)
     }
 
     suspend fun createCard(deckId: Long, front: String, back: String): Long {
-        println("🔄 Создание карточки в репозитории...")
         val card = Card(deckId = deckId, front = front, back = back)
-        println("📝 Создана карточка: $card")
-
         val id = cardDao.insertCard(card)
-        println("✅ Карточка сохранена в БД с ID: $id")
         return id
     }
 
@@ -71,5 +66,15 @@ class CardRepository @Inject constructor(
 
     suspend fun updateCard(card: Card) {
         cardDao.updateCard(card)
+    }
+
+    suspend fun blockCard(cardId: Long, blockSeconds: Int = 30) {
+        val now = System.currentTimeMillis()
+        val card = getCardById(cardId) ?: return
+
+        val updatedCard = card.copy(
+            nextReview = now + (blockSeconds * 1000L)
+        )
+        updateCard(updatedCard)
     }
 }

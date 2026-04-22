@@ -10,6 +10,11 @@ import com.example.cardproject.R
 import com.example.cardproject.databinding.ItemCardBinding
 import com.example.cardproject.model.Card
 import com.example.cardproject.ui.components.LearningStatusTooltip
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class CardAdapter(
     private val onCardClick: (Card) -> Unit = {},
@@ -40,6 +45,11 @@ class CardAdapter(
         holder.bind(card, isSelected, isSelectionMode)
     }
 
+    override fun onViewRecycled(holder: CardViewHolder) {
+        super.onViewRecycled(holder)
+        holder.stopTimer()
+    }
+
     fun toggleSelection(cardId: Long) {
         if (selectedItems.contains(cardId)) {
             selectedItems.remove(cardId)
@@ -65,6 +75,24 @@ class CardAdapter(
 
     fun isInSelectionMode(): Boolean = isSelectionMode
 
+    // Форматирование времени
+    private fun formatTime(seconds: Long): String {
+        return when {
+            seconds >= 3600 -> {
+                val hours = seconds / 3600
+                val minutes = (seconds % 3600) / 60
+                val secs = seconds % 60
+                String.format("%dч %02dм %02dс", hours, minutes, secs)
+            }
+            seconds >= 60 -> {
+                val minutes = seconds / 60
+                val secs = seconds % 60
+                String.format("%dм %02dс", minutes, secs)
+            }
+            else -> "${seconds}с"
+        }
+    }
+
     inner class CardViewHolder(
         private val binding: ItemCardBinding,
         private val onCardClick: (Card) -> Unit,
@@ -72,8 +100,11 @@ class CardAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private var isExpanded = false
+        private var timerJob: Job? = null
+        private var currentCard: Card? = null
 
         fun bind(card: Card, isSelected: Boolean, isSelectionMode: Boolean) {
+            currentCard = card
             binding.cardFront.text = card.front
             binding.cardBack.text = card.back
             binding.cardBack.visibility = View.VISIBLE
@@ -99,6 +130,52 @@ class CardAdapter(
                 onSelectionToggle(card.id)
                 true
             }
+
+            // Запускаем таймер для этой карточки
+            startTimerIfNeeded(card)
+        }
+
+        private fun startTimerIfNeeded(card: Card) {
+            val now = System.currentTimeMillis()
+            val isBlocked = card.nextReview != null && card.nextReview!! > now
+
+            if (isBlocked) {
+                startTimer(card)
+            } else {
+                stopTimer()
+                binding.timerLayout.visibility = View.GONE
+            }
+        }
+
+        private fun startTimer(card: Card) {
+            stopTimer()
+
+            timerJob = CoroutineScope(Dispatchers.Main).launch {
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    val remainingMs = card.nextReview?.let { it - now } ?: 0L
+
+                    if (remainingMs <= 0) {
+                        // Таймер истёк
+                        binding.timerLayout.visibility = View.GONE
+                        stopTimer()
+                        break
+                    }
+
+                    // Показываем таймер
+                    binding.timerLayout.visibility = View.VISIBLE
+                    val seconds = remainingMs / 1000
+                    binding.timerText.text = formatTime(seconds)
+
+                    delay(1000)
+                }
+            }
+        }
+
+        fun stopTimer() {
+            timerJob?.cancel()
+            timerJob = null
+            // Не скрываем таймер здесь, только останавливаем обновление
         }
 
         private fun setupLearningStatus(card: Card) {
@@ -157,9 +234,6 @@ class CardAdapter(
         }
 
         private fun isCardInProgress(card: Card): Boolean {
-            // ПРОСТАЯ ЛОГИКА: карточка "в процессе изучения", если:
-            // - Она не новая (была просмотрена) И
-            // - Она еще не выучена
             return card.lastReviewed != null && !isCardLearned(card)
         }
 
@@ -207,6 +281,7 @@ class CardAdapter(
     override fun onViewDetachedFromWindow(holder: CardViewHolder) {
         super.onViewDetachedFromWindow(holder)
         dismissTooltip()
+        holder.stopTimer()
     }
 
     object CardDiffCallback : DiffUtil.ItemCallback<Card>() {
@@ -215,7 +290,14 @@ class CardAdapter(
         }
 
         override fun areContentsTheSame(oldItem: Card, newItem: Card): Boolean {
-            return oldItem == newItem
+            // Сравниваем всё, кроме nextReview (он меняется каждую секунду)
+            return oldItem.id == newItem.id &&
+                    oldItem.deckId == newItem.deckId &&
+                    oldItem.front == newItem.front &&
+                    oldItem.back == newItem.back &&
+                    oldItem.reviewStage == newItem.reviewStage &&
+                    oldItem.consecutiveCorrect == newItem.consecutiveCorrect &&
+                    oldItem.interval == newItem.interval
         }
     }
 }

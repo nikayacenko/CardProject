@@ -37,4 +37,11 @@ interface ReviewLogDao {
 
     @Query("DELETE FROM review_logs WHERE timestamp < :cutoffDate")
     suspend fun deleteOldLogs(cutoffDate: Long)
+
+    @Query("DELETE FROM review_logs")
+    suspend fun deleteAll()
+
+    @Query("DELETE FROM review_logs WHERE cardId = :cardId")
+    suspend fun deleteByCardId(cardId: Long)
+
 }

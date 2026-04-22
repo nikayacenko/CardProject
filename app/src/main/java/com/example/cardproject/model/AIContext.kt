@@ -74,17 +74,33 @@ data class AIContext(
         avgTime: Long,
         wasCorrect: Boolean
     ): Float {
-        // Базовая усталость от количества карточек (0.01 за каждые 10 карт)
-        val volumeFatigue = cardsReviewed / 1000f
+        // 1. Фактор времени суток (Циркадный ритм)
+        // Усталость не начинается с 0, если ты сел учиться в 2 часа ночи
+        val timeFactor = when (currentHour) {
+            in 0..5 -> 0.4f    // Глубокая ночь — мозг уже уставший
+            in 22..23 -> 0.2f  // Поздний вечер
+            in 8..11 -> 0.0f   // Утренний пик бодрости
+            else -> 0.1f       // День
+        }
 
-        // Усталость от замедления
-        val slowdownFatigue = if (avgTime > 0) {
-            ((lastResponseTime.toFloat() / avgTime) - 1f).coerceIn(0f, 0.5f)
+        // 2. Агрессивный фактор объема (1.5% за карту)
+        // В мобильном приложении 30-50 карт — это уже серьезная нагрузка
+        val volumeFatigue = cardsReviewed * 0.015f
+
+        // 3. Когнитивный фактор (замедление реакции)
+        // Если ты стал отвечать в 1.5 раза медленнее среднего — это +15% к усталости
+        val speedFactor = if (avgTime > 0) {
+            ((lastResponseTime.toFloat() / avgTime) - 1.1f).coerceIn(0f, 0.3f)
         } else 0f
 
-        // Штраф за ошибку
-        val errorPenalty = if (!wasCorrect) 0.05f else 0f
+        // 4. Эмоциональное выгорание (ошибки)
+        // Каждая ошибка в сессии добавляет 4% к усталости (стресс)
+        val errorFactor = if (!wasCorrect) 0.04f else 0f
 
-        return (volumeFatigue + slowdownFatigue + errorPenalty).coerceIn(0f, 1f)
+        // Суммируем текущее состояние с накопленным
+        // Используем плавное наслоение, чтобы шкала не прыгала слишком резко
+        val targetFatigue = timeFactor + volumeFatigue + speedFactor + errorFactor
+
+        return targetFatigue.coerceIn(0f, 1f)
     }
 }

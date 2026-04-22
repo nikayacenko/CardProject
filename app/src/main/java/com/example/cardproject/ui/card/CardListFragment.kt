@@ -60,6 +60,8 @@ class CardListFragment : Fragment() {
         setupRecyclerView()
         setupObservers()
         setupClickListeners()
+
+
     }
 
     private fun setupToolbar() {

@@ -113,7 +113,11 @@ dependencies {
 
     // MockK (для моков - альтернатива Mockito)
     testImplementation("io.mockk:mockk:1.13.8")
-
+    testImplementation("org.mockito:mockito-core:5.5.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     // Android Architecture Components тесты
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 

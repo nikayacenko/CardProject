@@ -52,16 +52,16 @@ class LearningFragment : Fragment() {
         setupObservers()
         setupClickListeners()
         // Проверка статуса ML
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.isMLReady.collect { isReady ->
-                if (isReady) {
-                    binding.mlStatusBadge.visibility = View.VISIBLE
-                    binding.mlStatusBadge.text = "🤖 AI"
-                } else {
-                    binding.mlStatusBadge.visibility = View.GONE
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewModel.isMLReady.collect { isReady ->
+//                if (isReady) {
+//                    binding.mlStatusBadge.visibility = View.VISIBLE
+//                    binding.mlStatusBadge.text = "AI"
+//                } else {
+//                    binding.mlStatusBadge.visibility = View.GONE
+//                }
+//            }
+//        }
     }
 
     private fun handleExitAttempt() {
@@ -96,7 +96,54 @@ class LearningFragment : Fragment() {
             }
         }
 
-        // Дополнительно: индикатор AI и прогресс (согласно твоему дизайну)
+// Наблюдаем за изменением контекста (усталости)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sessionContext.collect { context ->
+                updateFatigueUI(context.userFatigueLevel)
+            }
+        }
+
+        // Наблюдаем за статусом AI (текстовое сообщение под шкалой)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.lastCalcStatus.collect { status ->
+                binding.mlStatusText.text = status
+            }
+        }
+    }
+    private fun updateFatigueUI(fatigue: Float) {
+        // Преобразуем 0.0-1.0 в 0-100 для ProgressBar
+        val progress = (fatigue * 100).toInt()
+        binding.fatigueIndicator.setProgress(progress, true)
+
+        // Меняем текст и цвет в зависимости от уровня усталости
+        when {
+            fatigue < 0.3f -> {
+                binding.fatigueText.text = "Низкая усталость"
+                binding.fatigueText.setTextColor(requireContext().getColor(R.color.green_500))
+                binding.fatigueIndicator.progressTintList =
+                    android.content.res.ColorStateList.valueOf(
+                        requireContext().getColor(R.color.green_500)
+                    )
+            }
+
+            fatigue < 0.7f -> {
+                binding.fatigueText.text = "Средняя усталость"
+                binding.fatigueText.setTextColor(requireContext().getColor(R.color.orange_500))
+                binding.fatigueIndicator.progressTintList =
+                    android.content.res.ColorStateList.valueOf(
+                        requireContext().getColor(R.color.orange_500)
+                    )
+            }
+
+            else -> {
+                binding.fatigueText.text = "Высокая усталость"
+                binding.fatigueText.setTextColor(requireContext().getColor(R.color.red_500))
+                binding.fatigueIndicator.progressTintList =
+                    android.content.res.ColorStateList.valueOf(
+                        requireContext().getColor(R.color.red_500)
+                    )
+            }
+        }
     }
 
     private fun showCard(card: Card) {
@@ -127,6 +174,9 @@ class LearningFragment : Fragment() {
     private fun submitAnswer(quality: Int) {
         val card = viewModel.currentCard.value ?: return
         val time = SystemClock.elapsedRealtime() - cardShowTime
+        if (quality == 0) {
+            viewModel.blockCard(card, 30)  // Блокируем на 30 секунд
+        }
         viewModel.answerCard(card, quality, time)
     }
 

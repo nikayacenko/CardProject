@@ -3,6 +3,8 @@ package com.example.cardproject.ml
 
 import android.content.Context
 import android.content.res.AssetFileDescriptor
+import android.os.Build
+import android.util.Log
 import com.example.cardproject.model.MLPrediction
 import com.example.cardproject.model.ReviewLog
 import org.tensorflow.lite.Interpreter
@@ -17,13 +19,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.tensorflow.lite.DataType
 
 @Singleton
-class TensorFlowLiteModel @Inject constructor(
+open class TensorFlowLiteModel @Inject constructor(
     private val context: Context
 ) {
 
     private var interpreter: Interpreter? = null
     private val _isModelReady = MutableStateFlow(false)
-    val isModelReady = _isModelReady.asStateFlow()
+    open val isModelReady = _isModelReady.asStateFlow()
 
     // Параметры модели
     private val inputSize = 20  // Количество признаков
@@ -36,10 +38,13 @@ class TensorFlowLiteModel @Inject constructor(
     private fun loadModel() {
         try {
             // Загружаем модель из assets
+            Log.d("TFLite", "Loading model...")
+            Log.d("TFLite", "Device: ${Build.MODEL}, SDK: ${Build.VERSION.SDK_INT}")
             val modelFile = FileUtil.loadMappedFile(context, "forgetting_model.tflite")
             interpreter = Interpreter(modelFile)
             _isModelReady.value = true
             println("✅ Модель TensorFlow Lite загружена")
+            Log.d("TFLite", "✅ Model loaded successfully")
         } catch (e: Exception) {
             println("❌ Ошибка загрузки модели: ${e.message}")
             _isModelReady.value = false
@@ -50,7 +55,7 @@ class TensorFlowLiteModel @Inject constructor(
      * Предсказание вероятности забывания
      * Именно так: model.predict(features) одной строкой!
      */
-    suspend fun predict(log: ReviewLog): MLPrediction {
+    open suspend fun predict(log: ReviewLog): MLPrediction {
         if (!_isModelReady.value) {
             return MLPrediction(0.5f, 1.0f, 0.1f, true)
         }
@@ -58,7 +63,10 @@ class TensorFlowLiteModel @Inject constructor(
         return try {
             // 1. Преобразуем признаки в вектор
             val inputFeatures = extractFeatures(log)
-
+            if (inputFeatures.size != 20) {
+                println("❌ Ошибка: ожидается 20 признаков, получено ${inputFeatures.size}")
+                return MLPrediction(0.5f, 1.0f, 0.0f, true)
+            }
             // 2. Подготавливаем входной тензор
             val inputArray = arrayOf(inputFeatures)
             val inputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, inputSize), DataType.FLOAT32)
@@ -177,16 +185,14 @@ class TensorFlowLiteModel @Inject constructor(
             (log.correctRateBefore * log.daysSinceLastReview / 30f).coerceIn(0f, 1f), // Прошлая успеваемость×интервал
 
             // Дополнительные признаки (заполняем до 20)
-            0f, 0f, 0f, 0f
+            0f, 0f, 0f
         )
     }
 
     private fun encodeQuestionType(type: String): Float {
         return when (type) {
             "FACT" -> 0.1f
-            "DEFINITION" -> 0.3f
-            "TRANSLATION" -> 0.4f
-            "FORMULA" -> 0.7f
+            "DEFINITION" -> 0.4f
             "PROOF" -> 0.9f
             else -> 0.5f
         }

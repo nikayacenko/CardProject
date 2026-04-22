@@ -38,21 +38,17 @@ class QuestionType:
     FACT = 'FACT'
     DEFINITION = 'DEFINITION'
     PROOF = 'PROOF'
-    TRANSLATION = 'TRANSLATION'
-    FORMULA = 'FORMULA'
 
     @classmethod
     def get_all(cls):
-        return [cls.FACT, cls.DEFINITION, cls.PROOF, cls.TRANSLATION, cls.FORMULA]
+        # Удалена FORMULA из общего списка типов
+        return [cls.FACT, cls.DEFINITION, cls.PROOF]
 
     @classmethod
     def encode(cls, qtype):
-        """Кодирование типа вопроса в число для модели"""
         mapping = {
             cls.FACT: 0.1,
-            cls.DEFINITION: 0.3,
-            cls.TRANSLATION: 0.4,
-            cls.FORMULA: 0.7,
+            cls.DEFINITION: 0.4,
             cls.PROOF: 0.9
         }
         return mapping.get(qtype, 0.5)
@@ -73,56 +69,142 @@ class SyntheticDataGenerator:
         """Генерация полного датасета"""
 
         print("🔄 Генерация синтетических данных...")
+        # 1. Сначала генерируем типы
+        question_types = self._generate_question_type()
 
+        # 2. Генерируем длину текста, привязанную к типу
+        text_lengths = self._generate_text_length_by_type(question_types)
+
+        hours = self._generate_hour_of_day()
+        days = self._generate_day_of_week()
+        positions = self._generate_session_position()
+        fatigue_levels = self._generate_fatigue_based_on_features(hours, days, positions)
         # Базовые параметры
         data = {
-            # Признаки карточки
-            'cardTextLength': self._generate_text_length(),
+            'questionType': question_types,
+            'cardTextLength': text_lengths,
             'hasFormulas': self._generate_has_formulas(),
-            'questionType': self._generate_question_type(),
-
-            # Контекстные признаки
-            'responseTimeMs': self._generate_response_time(),
-            'hourOfDay': self._generate_hour_of_day(),
-            'dayOfWeek': self._generate_day_of_week(),
-            'fatigueLevel': self._generate_fatigue(),
-            'cardsReviewedInSession': self._generate_session_position(),
-
-            # История карточки
+            'hourOfDay': hours,
+            'dayOfWeek': days,
+            'fatigueLevel': fatigue_levels,
+            'cardsReviewedInSession': positions,
             'totalReviewsBefore': self._generate_total_reviews(),
             'correctRateBefore': self._generate_correct_rate(),
             'streakCorrectBefore': self._generate_streak(),
             'daysSinceLastReview': self._generate_days_since_last(),
-
-            # Семантические связи
             'linkedCardsCount': self._generate_linked_count(),
             'linkedCardsMastery': self._generate_linked_mastery(),
         }
-
+        df_temp = pd.DataFrame(data)
+        data['responseTimeMs'] = self._generate_response_time(df_temp)
         df = pd.DataFrame(data)
-
+        df['questionTypeEncoded'] = df['questionType'].apply(QuestionType.encode)
         # Генерируем целевую переменную (было ли правильно)
         df['wasCorrect'] = self._generate_was_correct(df)
 
         return df
 
-    def _generate_text_length(self):
-        """Длина текста карточки (10-1000 символов)"""
-        return np.random.randint(10, 1000, self.num_samples)
+    def _generate_fatigue_based_on_features(self, hours, days, positions):
+        """Генерация усталости на основе других признаков"""
+        fatigue_levels = []
+
+        for hour, day, position in zip(hours, days, positions):
+            # Базовый уровень
+            base_fatigue = np.random.uniform(0.1, 0.4)
+
+            # Корректировка по часу
+            if hour >= 22 or hour <= 5:
+                base_fatigue += 0.3
+            elif hour >= 19:
+                base_fatigue += 0.2
+            elif hour >= 14:
+                base_fatigue += 0.1
+
+            # Корректировка по дню недели
+            if day >= 6:
+                base_fatigue -= 0.1
+
+            # Корректировка по позиции
+            if position > 40:
+                base_fatigue += 0.3
+            elif position > 25:
+                base_fatigue += 0.2
+            elif position > 10:
+                base_fatigue += 0.1
+
+            # Шум
+            noise = np.random.uniform(-0.1, 0.1)
+            fatigue = max(0.0, min(1.0, base_fatigue + noise))
+            fatigue_levels.append(fatigue)
+
+        return np.array(fatigue_levels)
+
+    def _generate_text_length_by_type(self, types):
+        """Длина текста в зависимости от типа"""
+        lengths = []
+        for qtype in types:
+            if qtype == QuestionType.FACT:
+                # Короткие и средние тексты
+                if random.random() < 0.7:
+                    length = random.randint(10, 60)
+                else:
+                    length = random.randint(60, 150)
+            elif qtype == QuestionType.DEFINITION:
+                # Средние и длинные
+                if random.random() < 0.6:
+                    length = random.randint(60, 200)
+                else:
+                    length = random.randint(200, 400)
+            else:  # PROOF
+                # Длинные
+                length = random.randint(250, 800)
+            lengths.append(length)
+        return np.array(lengths)
+
+    def _generate_response_time(self, df_temp):
+        """Время ответа (8-12 секунд в среднем)"""
+        times = []
+        for i in range(self.num_samples):
+            row = df_temp.iloc[i]
+            text_length = row['cardTextLength'] if not np.isnan(row['cardTextLength']) else 100
+
+            # Базовое время по типу вопроса
+            qtype = row['questionType']
+            if qtype == QuestionType.FACT:
+                base_time = 5000
+            elif qtype == QuestionType.DEFINITION:
+                base_time = 8000
+            else:  # PROOF
+                base_time = 12000
+
+            # Время на чтение (~8 мс/символ)
+            reading_time = text_length * 8
+
+            # Формулы увеличивают время
+            if row['hasFormulas'] == 1:
+                base_time *= 1.3
+
+            # Усталость замедляет
+            fatigue_multiplier = 1.0 + (row['fatigueLevel'] * 0.4)
+
+            # Шум
+            noise = np.random.normal(1.0, 0.25)
+
+            final_time = (base_time + reading_time) * fatigue_multiplier * noise
+            times.append(min(30000, max(2000, final_time)))
+
+        return np.array(times)
+
+
+    def _generate_question_type(self):
+        """Обновленное распределение типов (без FORMULA)"""
+        types = QuestionType.get_all()
+        probabilities = [0.45, 0.35, 0.20] # FACT, DEFINITION, PROOF, TRANSLATION
+        return np.random.choice(types, self.num_samples, p=probabilities)
 
     def _generate_has_formulas(self):
         """Наличие формул (30% карточек с формулами)"""
         return np.random.choice([0, 1], self.num_samples, p=[0.7, 0.3])
-
-    def _generate_question_type(self):
-        """Тип вопроса с реалистичным распределением"""
-        types = QuestionType.get_all()
-        probabilities = [0.4, 0.3, 0.1, 0.1, 0.1]  # FACT, DEFINITION, PROOF, TRANSLATION, FORMULA
-        return np.random.choice(types, self.num_samples, p=probabilities)
-
-    def _generate_response_time(self):
-        """Время ответа (1-30 секунд)"""
-        return np.random.randint(1000, 30000, self.num_samples)
 
     def _generate_hour_of_day(self):
         """Час дня (пик активности 10-22)"""
@@ -146,10 +228,6 @@ class SyntheticDataGenerator:
                 day = random.randint(6, 7)  # Выходные
             days.append(day)
         return np.array(days)
-
-    def _generate_fatigue(self):
-        """Уровень усталости (0-1)"""
-        return np.random.uniform(0, 1, self.num_samples)
 
     def _generate_session_position(self):
         """Позиция в сессии (0-50 карточек)"""
@@ -180,35 +258,39 @@ class SyntheticDataGenerator:
         return np.random.uniform(0, 1, self.num_samples)
 
     def _generate_was_correct(self, df):
-        """Генерация целевой переменной на основе реалистичных правил"""
-
+        """Правильные ответы (цель 65-75% успеха)"""
         was_correct = []
 
         for i in range(self.num_samples):
-            # Базовая вероятность правильного ответа
-            prob = 0.7  # 70% baseline
+            row = df.iloc[i]
 
-            # Корректировки на основе признаков
-            if df.iloc[i]['daysSinceLastReview'] > 14:
-                prob -= 0.2  # Давно не повторял - хуже
+            # Базовый уровень 70% (оптимальный для интервального повторения)
+            prob = 0.70
 
-            if df.iloc[i]['fatigueLevel'] > 0.7:
-                prob -= 0.15  # Устал - хуже
+            # Штрафы
+            if row['daysSinceLastReview'] > 14:
+                prob -= 0.12
+            if row['fatigueLevel'] > 0.7:
+                prob -= 0.10
+            if row['hasFormulas'] == 1:
+                prob -= 0.10
+            if row['cardTextLength'] > 400:
+                prob -= 0.08
+            if row['questionType'] == QuestionType.PROOF:
+                prob -= 0.08
+            elif row['questionType'] == QuestionType.DEFINITION:
+                prob -= 0.03
 
-            if df.iloc[i]['correctRateBefore'] > 0.8:
-                prob += 0.1  # Хорошая история - лучше
+            # Бонусы
+            if row['correctRateBefore'] > 0.8:
+                prob += 0.08
+            if row['streakCorrectBefore'] > 3:
+                prob += 0.05
+            if row['linkedCardsMastery'] > 0.7:
+                prob += 0.05
 
-            if df.iloc[i]['hasFormulas'] == 1:
-                prob -= 0.1  # С формулами - сложнее
-
-            if df.iloc[i]['streakCorrectBefore'] > 3:
-                prob += 0.05  # На волне успеха
-
-            if df.iloc[i]['linkedCardsMastery'] > 0.7:
-                prob += 0.1  # Связанные карточки выучены - легче
-
-            # Ограничиваем вероятность
-            prob = max(0.1, min(0.95, prob))
+            # Ограничиваем диапазон (40-85%)
+            prob = max(0.40, min(0.85, prob))
 
             # Генерируем результат
             result = 1 if random.random() < prob else 0
@@ -451,7 +533,7 @@ def main():
     print()
 
     # 2. Загрузка или генерация данных
-    data_path = 'data/review_logs.csv'
+    data_path = 'trash_data/review_logs.csv'
 
     if os.path.exists(data_path):
         print(f"📂 Загрузка реальных данных из: {data_path}")
@@ -466,7 +548,7 @@ def main():
             df = generator.generate()
 
             # Сохранение
-            df.to_csv('data/synthetic_data.csv', index=False)
+            df.to_csv('data/synthetic_data4.csv', index=False, sep=',', decimal='.')
             print(f"   ✅ Сгенерировано {len(df)} записей")
             print(f"   💾 Сохранено: {os.path.abspath('data/synthetic_data.csv')}")
         else:
@@ -579,8 +661,6 @@ def main():
         'question_types': {
             'FACT': 0.1,
             'DEFINITION': 0.3,
-            'TRANSLATION': 0.4,
-            'FORMULA': 0.7,
             'PROOF': 0.9
         }
     }

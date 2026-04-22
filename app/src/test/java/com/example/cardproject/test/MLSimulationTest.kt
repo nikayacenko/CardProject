@@ -96,3 +96,108 @@ class MLSimulationTest {
         println("\n💾 Результаты сохранены: ${file.absolutePath}")
     }
 }
+// File: app/src/test/java/com/example/cardproject/test/MLSimulationTest.kt
+//package com.example.cardproject.test
+//
+//import com.example.cardproject.database.AppDatabase
+//import com.example.cardproject.database.repository.ReviewLogRepository
+//import com.example.cardproject.ml.MLSpacedRepetitionCalculator
+//import com.example.cardproject.ml.TensorFlowLiteModel
+//import com.example.cardproject.model.LearningMode
+//import kotlinx.coroutines.runBlocking
+//import org.junit.Before
+//import org.junit.Test
+//import java.io.File
+//import java.time.LocalDateTime
+//import java.time.format.DateTimeFormatter
+//
+//class MLSimulationTest {
+//
+//    private lateinit var engine: MLSimulationEngine
+//
+//
+//
+//    @Before
+//    fun setup() {
+//        // Создаем engine без реального контекста
+//        engine = MLSimulationEngine()
+//
+//        // Здесь мы не инициализируем реальный ML,
+//        // потому что для этого нужен Android Context
+//        println("⚠️ Тест использует fallback (не реальный ML)")
+//        println("   Для тестирования реального ML используйте:")
+//        println("   ./gradlew connectedAndroidTest")
+//    }
+//
+//    @Test
+//    fun test30DaysWithMLFallback() = runBlocking {
+//        val cards = TestDataFactory.createTestDeck(20)
+//
+//        // Используем runSimulation (с заглушкой), а не runSimulationWithML
+//        val report = engine.runSimulation(
+//            cards = cards,
+//            days = 30,
+//            mode = LearningMode.LONG_TERM
+//        )
+//
+//        assert(report.masteredCards > 0) { "Должны быть выученные карточки" }
+//        assert(report.avgInterval > 5) { "Средний интервал должен расти" }
+//
+//        saveResults(report, "30days_fallback")
+//    }
+//
+//    @Test
+//    fun test60DaysWithMLFallback() = runBlocking {
+//        val cards = TestDataFactory.createTestDeck(20)
+//
+//        val report = engine.runSimulation(
+//            cards = cards,
+//            days = 60,
+//            mode = LearningMode.LONG_TERM
+//        )
+//
+//        assert(report.masteredCards > report.totalCards * 0.7) {
+//            "После 60 дней должно быть выучено >70% карточек"
+//        }
+//
+//        saveResults(report, "60days_fallback")
+//    }
+//
+//    @Test
+//    fun testCompareModes() = runBlocking {
+//        val cards = TestDataFactory.createTestDeck(20)
+//        val engine = MLSimulationEngine()
+//        val longTermReport = engine.runSimulation(
+//            cards = cards.map { it.copy() },
+//            days = 60,
+//            mode = LearningMode.LONG_TERM
+//        )
+//
+//        val shortTermReport = engine.runSimulation(
+//            cards = cards.map { it.copy() },
+//            days = 60,
+//            mode = LearningMode.SHORT_TERM
+//        )
+//
+//        println("\n" + "=".repeat(60))
+//        println("СРАВНЕНИЕ РЕЖИМОВ (FALLBACK)")
+//        println("=".repeat(60))
+//        println("\n📚 ДОЛГОВРЕМЕННЫЙ:")
+//        println("• Выучено: ${longTermReport.masteredCards}")
+//        println("• Средний интервал: ${"%.1f".format(longTermReport.avgInterval)} дней")
+//
+//        println("\n🎯 КРАТКОВРЕМЕННЫЙ:")
+//        println("• Выучено: ${shortTermReport.masteredCards}")
+//        println("• Средний интервал: ${"%.1f".format(shortTermReport.avgInterval)} дней")
+//    }
+//
+//    private fun saveResults(report: SimulationReport, suffix: String) {
+//        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+//        val file = File("build/reports/simulation_${suffix}_$timestamp.csv")
+//        file.parentFile.mkdirs()
+//        file.writeText(report.exportToCSV())
+//        println("\n💾 Результаты сохранены: ${file.absolutePath}")
+//    }
+//
+//
+//}

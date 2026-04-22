@@ -52,4 +52,16 @@ data class Card(
     val algorithmType: String = "ML", // Для сравнения в курсовой (SM2 vs ML)
     val masteryLevel: Float = 0f,
     var lastPredictedProbability: Float = 0f // Уверенность ИИ в вашем ответе
-)
+){
+    fun calculateMetadata(): Card {
+        val fullText = "$front $back"
+
+        // Считаем слова
+        val words = fullText.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        val calculatedWordCount = words.size
+
+        return this.copy(
+            wordCount = calculatedWordCount
+        )
+    }
+}

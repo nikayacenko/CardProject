@@ -37,7 +37,8 @@ class LearningViewModel @Inject constructor(
     private var dueCards: List<Card> = emptyList()
     private var currentCardIndex = 0
     private var startTime: Long = 0
-
+    private val _lastCalcStatus = MutableStateFlow<String>("AI: готов к работе")
+    val lastCalcStatus: StateFlow<String> = _lastCalcStatus.asStateFlow()
     // Результаты только для статистики текущей сессии
     private val sessionResults = mutableListOf<Pair<Boolean, Long>>()
 
@@ -158,5 +159,25 @@ class LearningViewModel @Inject constructor(
             sessionDuration = System.currentTimeMillis() - startTime,
             learningMode = _sessionContext.value.learningMode
         )
+    }
+    fun blockCard(card: Card, blockSeconds: Int = 30) {
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            val blockedCard = card.copy(
+                nextReview = now + (blockSeconds * 1000L)
+            )
+            cardRepository.updateCard(blockedCard)
+
+            // Обновляем в списке dueCards
+            val index = dueCards.indexOfFirst { it.id == card.id }
+            if (index >= 0) {
+                dueCards = dueCards.toMutableList().apply {
+                    set(index, blockedCard)
+                }
+                if (currentCardIndex == index) {
+                    _currentCard.value = blockedCard
+                }
+            }
+        }
     }
 }
