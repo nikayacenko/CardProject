@@ -81,6 +81,7 @@ class StatsViewModel @Inject constructor(
     fun getDebugInfo(): String {
         return _debugInfo.value
     }
+
 }
 
 data class TotalStats(

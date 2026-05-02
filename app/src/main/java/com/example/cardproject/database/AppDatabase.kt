@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.cardproject.database.dao.CardDao
 import com.example.cardproject.database.dao.DeckDao
 import com.example.cardproject.database.dao.NoteDao
@@ -49,7 +50,14 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "card_database"
                 )
-                    .fallbackToDestructiveMigration() // УДАЛЕНЫ ВСЕ МИГРАЦИИ, ТОЛЬКО ДЕСТРУКТИВНАЯ
+                    .fallbackToDestructiveMigration()
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            // ВКЛЮЧАЕМ ПОДДЕРЖКУ ВНЕШНИХ КЛЮЧЕЙ ДЛЯ КАСКАДНОГО УДАЛЕНИЯ
+                            db.execSQL("PRAGMA foreign_keys = ON;")
+                        }
+                    })
                     .build()
                 INSTANCE = instance
                 instance

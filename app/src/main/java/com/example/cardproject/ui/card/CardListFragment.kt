@@ -5,8 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -348,19 +351,51 @@ class CardListFragment : Fragment() {
             maxLines = 4
         }
 
+        val typeSpinner = Spinner(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = 16
+            }
+
+            val adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.question_types,
+                android.R.layout.simple_spinner_dropdown_item
+            )
+            this.adapter = adapter
+        }
+
+        var selectedQuestionType = "FACT"
+        typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedQuestionType = when (position) {
+                    0 -> "FACT"
+                    1 -> "DEFINITION"
+                    2 -> "PROOF"
+                    else -> "FACT"
+                }
+                Toast.makeText(requireContext(), "Выбран тип: $selectedQuestionType", Toast.LENGTH_SHORT).show()
+                println("📝 В диалоге выбран тип: $selectedQuestionType")
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
         layout.addView(frontInput)
         layout.addView(backInput)
+        layout.addView(typeSpinner)
         builder.setView(layout)
 
         builder.setPositiveButton("Создать") { _, _ ->
             val front = frontInput.text.toString().trim()
             val back = backInput.text.toString().trim()
 
-            println("📝 Создание карточки: front='$front', back='$back'")
+            println("📝 КНОПКА СОЗДАТЬ: front='$front', back='$back', type='$selectedQuestionType'")
 
             if (front.isNotBlank() && back.isNotBlank()) {
                 if (deckId != -1L) {
-                    viewModel.createCard(front, back)
+                    viewModel.createCard(front, back, selectedQuestionType)
                     Toast.makeText(requireContext(), "Карточка создана!", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(requireContext(), "Ошибка: колода не найдена", Toast.LENGTH_SHORT).show()

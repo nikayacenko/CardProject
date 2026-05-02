@@ -42,4 +42,5 @@ class ReviewLogRepository @Inject constructor(
         reviewLogDao.getLogsForTraining(limit)
 
 
+
 }

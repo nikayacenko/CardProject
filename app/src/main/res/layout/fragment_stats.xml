@@ -227,6 +227,336 @@
 
             </LinearLayout>
 
+
+            <!-- НОВАЯ СЕКЦИЯ: КАЛЕНДАРЬ АКТИВНОСТИ -->
+<!--            <TextView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="📅 Календарь активности"-->
+<!--                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"-->
+<!--                android:textStyle="bold"-->
+<!--                android:layout_marginTop="8dp"-->
+<!--                android:layout_marginBottom="16dp" />-->
+
+<!--            <com.google.android.material.card.MaterialCardView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginBottom="24dp"-->
+<!--                app:cardCornerRadius="12dp"-->
+<!--                app:cardElevation="4dp">-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:padding="16dp">-->
+
+<!--                    &lt;!&ndash; Заголовок с навигацией &ndash;&gt;-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="horizontal"-->
+<!--                        android:gravity="center_vertical"-->
+<!--                        android:layout_marginBottom="16dp">-->
+
+<!--                        <ImageButton-->
+<!--                            android:id="@+id/prevMonthButton"-->
+<!--                            android:layout_width="48dp"-->
+<!--                            android:layout_height="48dp"-->
+<!--                            android:src="@drawable/ic_chevron_left"-->
+<!--                            android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--                            android:contentDescription="Предыдущий месяц" />-->
+
+<!--                        <TextView-->
+<!--                            android:id="@+id/monthYearText"-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Май 2024"-->
+<!--                            android:textAlignment="center"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:textStyle="bold" />-->
+
+<!--                        <ImageButton-->
+<!--                            android:id="@+id/nextMonthButton"-->
+<!--                            android:layout_width="48dp"-->
+<!--                            android:layout_height="48dp"-->
+<!--                            android:src="@drawable/ic_chevron_right"-->
+<!--                            android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--                            android:contentDescription="Следующий месяц" />-->
+
+<!--                    </LinearLayout>-->
+
+<!--                    &lt;!&ndash; Дни недели &ndash;&gt;-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="horizontal"-->
+<!--                        android:layout_marginBottom="8dp">-->
+
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Пн"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="@android:color/darker_gray" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Вт"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="@android:color/darker_gray" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Ср"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="@android:color/darker_gray" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Чт"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="@android:color/darker_gray" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Пт"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="@android:color/darker_gray" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Сб"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="#F44336" />-->
+<!--                        <TextView-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:text="Вс"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textColor="#F44336" />-->
+
+<!--                    </LinearLayout>-->
+
+<!--                    &lt;!&ndash; Сетка календаря &ndash;&gt;-->
+<!--&lt;!&ndash;                    <androidx.gridlayout.widget.GridLayout&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:id="@+id/calendarGrid"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_width="match_parent"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                        app:columnCount="7"&ndash;&gt;-->
+<!--&lt;!&ndash;                        app:rowCount="6"&ndash;&gt;-->
+<!--&lt;!&ndash;                        app:alignmentMode="alignBounds"&ndash;&gt;-->
+<!--&lt;!&ndash;                        app:columnOrderPreserved="false"&ndash;&gt;-->
+<!--&lt;!&ndash;                        app:useDefaultMargins="true">&ndash;&gt;-->
+
+<!--&lt;!&ndash;                        &lt;!&ndash; Добавьте эту настройку для равных колонок &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;                        <androidx.gridlayout.widget.GridLayout&ndash;&gt;-->
+<!--&lt;!&ndash;                            android:layout_width="0dp"&ndash;&gt;-->
+<!--&lt;!&ndash;                            android:layout_height="0dp"&ndash;&gt;-->
+<!--&lt;!&ndash;                            app:layout_columnSpan="7"&ndash;&gt;-->
+<!--&lt;!&ndash;                            app:layout_gravity="fill" />&ndash;&gt;-->
+
+<!--&lt;!&ndash;                    </androidx.gridlayout.widget.GridLayout>&ndash;&gt;-->
+
+<!--                    <LinearLayout-->
+<!--                        android:id="@+id/calendarGrid"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="vertical" />-->
+
+<!--&lt;!&ndash;                    <TableLayout&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:id="@+id/calendarGrid"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_width="match_parent"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:stretchColumns="0,1,2,3,4,5,6" />&ndash;&gt;-->
+
+<!--&lt;!&ndash;                    <androidx.recyclerview.widget.RecyclerView&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:id="@+id/calendarGrid"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_width="match_parent"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:nestedScrollingEnabled="false" />&ndash;&gt;-->
+
+<!--                    &lt;!&ndash; Легенда &ndash;&gt;-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="horizontal"-->
+<!--                        android:gravity="center"-->
+<!--                        android:layout_marginTop="16dp"-->
+<!--                        android:padding="8dp"-->
+<!--                        android:background="@android:color/background_light">-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:orientation="horizontal"-->
+<!--                            android:layout_marginEnd="16dp">-->
+<!--                            <View-->
+<!--                                android:layout_width="16dp"-->
+<!--                                android:layout_height="16dp"-->
+<!--                                android:layout_marginEnd="4dp"-->
+<!--                                android:background="@drawable/calendar_day_high" />-->
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="≥80%"-->
+<!--                                android:textSize="11sp" />-->
+<!--                        </LinearLayout>-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:orientation="horizontal"-->
+<!--                            android:layout_marginEnd="16dp">-->
+<!--                            <View-->
+<!--                                android:layout_width="16dp"-->
+<!--                                android:layout_height="16dp"-->
+<!--                                android:layout_marginEnd="4dp"-->
+<!--                                android:background="@drawable/calendar_day_medium" />-->
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="50-79%"-->
+<!--                                android:textSize="11sp" />-->
+<!--                        </LinearLayout>-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:orientation="horizontal"-->
+<!--                            android:layout_marginEnd="16dp">-->
+<!--                            <View-->
+<!--                                android:layout_width="16dp"-->
+<!--                                android:layout_height="16dp"-->
+<!--                                android:layout_marginEnd="4dp"-->
+<!--                                android:background="@drawable/calendar_day_low" />-->
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="&lt;50%"-->
+<!--                                android:textSize="11sp" />-->
+<!--                        </LinearLayout>-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:orientation="horizontal">-->
+<!--                            <View-->
+<!--                                android:layout_width="16dp"-->
+<!--                                android:layout_height="16dp"-->
+<!--                                android:layout_marginEnd="4dp"-->
+<!--                                android:background="@drawable/calendar_day_empty" />-->
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="Нет занятий"-->
+<!--                                android:textSize="11sp" />-->
+<!--                        </LinearLayout>-->
+
+<!--                    </LinearLayout>-->
+
+<!--                    &lt;!&ndash; Краткая статистика календаря &ndash;&gt;-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="horizontal"-->
+<!--                        android:layout_marginTop="12dp"-->
+<!--                        android:padding="12dp"-->
+<!--                        android:background="@android:color/background_light">-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:orientation="vertical"-->
+<!--                            android:gravity="center">-->
+
+<!--                            <TextView-->
+<!--                                android:id="@+id/studyStreakText"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="0"-->
+<!--                                android:textSize="24sp"-->
+<!--                                android:textStyle="bold"-->
+<!--                                android:textColor="#4CAF50" />-->
+
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="дней подряд"-->
+<!--                                android:textSize="12sp" />-->
+
+<!--                        </LinearLayout>-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:orientation="vertical"-->
+<!--                            android:gravity="center">-->
+
+<!--                            <TextView-->
+<!--                                android:id="@+id/studyDaysInMonthText"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="0"-->
+<!--                                android:textSize="24sp"-->
+<!--                                android:textStyle="bold"-->
+<!--                                android:textColor="#2196F3" />-->
+
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="дней в месяце"-->
+<!--                                android:textSize="12sp" />-->
+
+<!--                        </LinearLayout>-->
+
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:orientation="vertical"-->
+<!--                            android:gravity="center">-->
+
+<!--                            <TextView-->
+<!--                                android:id="@+id/avgAccuracyMonthText"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="0%"-->
+<!--                                android:textSize="24sp"-->
+<!--                                android:textStyle="bold"-->
+<!--                                android:textColor="#FF9800" />-->
+
+<!--                            <TextView-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="средняя точность"-->
+<!--                                android:textSize="12sp" />-->
+
+<!--                        </LinearLayout>-->
+
+<!--                    </LinearLayout>-->
+
+<!--                </LinearLayout>-->
+
+<!--            </com.google.android.material.card.MaterialCardView>-->
+
             <!-- Недавние сессии -->
             <TextView
                 android:layout_width="match_parent"

@@ -142,7 +142,9 @@ class LearningViewModel @Inject constructor(
     }
 
     private suspend fun updateProgress() {
-        _learningProgress.value = cardRepository.getLearningProgress(deckId)
+        val progress = cardRepository.getLearningProgress(deckId)
+        _learningProgress.value = progress
+        println("📊 LearningProgress обновлен: total=${progress.totalCards}, new=${progress.newCards}, learning=${progress.learnedCards}, review=${progress.dueCards}")
     }
 
     fun getAnsweredCount() = sessionResults.size

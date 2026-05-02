@@ -56,12 +56,109 @@ data class Card(
     fun calculateMetadata(): Card {
         val fullText = "$front $back"
 
-        // Считаем слова
+        // 1. Подсчет слов
         val words = fullText.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
         val calculatedWordCount = words.size
 
-        return this.copy(
-            wordCount = calculatedWordCount
+        // 2. Определение формул
+        val hasFormula = detectFormula(fullText)
+
+        // 3. РАСЧЕТ СЛОЖНОСТИ (0-1)
+        val calculatedDifficulty = calculateDifficultyScore(
+            questionType = this.questionType,
+            wordCount = calculatedWordCount,
+            hasFormula = hasFormula,
+            frontLength = front.length,
+            backLength = back.length
         )
+
+        println("📊 РАСЧЕТ СЛОЖНОСТИ для карточки:")
+        println("   - Тип: $questionType")
+        println("   - Слов: $calculatedWordCount")
+        println("   - Формулы: $hasFormula")
+        println("   - Сложность: $calculatedDifficulty")
+
+        return this.copy(
+            wordCount = calculatedWordCount,
+            isFormula = hasFormula,
+            difficultyScore = calculatedDifficulty
+        )
+    }
+
+    /**
+     * ДЕТАЛЬНЫЙ РАСЧЕТ СЛОЖНОСТИ
+     * Учитывает 5 факторов:
+     * 1. Тип вопроса (30%)
+     * 2. Длина текста (25%)
+     * 3. Наличие формул (20%)
+     * 4. Структура ответа (15%)
+     * 5. Специфические маркеры (10%)
+     */
+    private fun calculateDifficultyScore(
+        questionType: String,
+        wordCount: Int,
+        hasFormula: Boolean,
+        frontLength: Int,
+        backLength: Int
+    ): Float {
+
+        // ФАКТОР 1: ТИП ВОПРОСА (вес 40%) - увеличил вес
+        val typeFactor = when (QuestionType.fromString(questionType)) {
+            QuestionType.FACT -> 0.25f
+            QuestionType.DEFINITION -> 0.55f
+            QuestionType.PROOF -> 0.85f
+        }
+
+        // ФАКТОР 2: ДЛИНА ТЕКСТА (вес 25%)
+        val lengthFactor = when {
+            wordCount <= 10 -> 0.1f
+            wordCount <= 25 -> 0.3f
+            wordCount <= 50 -> 0.5f
+            else -> 0.7f
+        }
+
+        // ФАКТОР 3: НАЛИЧИЕ ФОРМУЛ (вес 20%)
+        val formulaFactor = if (hasFormula) 0.8f else 0.2f
+
+        // ИТОГОВЫЙ РАСЧЕТ
+        val finalDifficulty =
+            typeFactor * 0.45f +
+                    lengthFactor * 0.30f +
+                    formulaFactor * 0.25f
+
+        // Убираем шум, просто округляем до 2 знаков
+        return (finalDifficulty * 100).toInt() / 100.0f
+    }
+
+    /**
+     * Определение наличия формул
+     */
+    private fun detectFormula(text: String): Boolean {
+        val formulaPatterns = listOf(
+            Regex("""\$.*?\$"""),           // $math$
+            Regex("""\$\$.*?\$\$"""),       // $$math$$
+            Regex("""\\[a-zA-Z]+"""),       // \frac, \sqrt
+            Regex("""[a-z]_\d+"""),         // x_1, y_2
+            Regex("""[a-z]\^\d+"""),        // x^2, y^3
+            Regex("""\d+[\+\-\*\/]\d+"""),  // 2+2, 3*4
+            Regex("""[=≠≤≥<>]"""),          // операторы сравнения
+            Regex("""\b(sin|cos|tan|log|ln|sqrt|sum|int)\b""", RegexOption.IGNORE_CASE),
+            Regex("""[αβγδεζηθικλμνξοπρστυφχψω]""") // греческие буквы
+        )
+        return formulaPatterns.any { it.containsMatchIn(text) }
+    }
+
+    /**
+     * Получить тип вопроса как enum
+     */
+    fun getQuestionTypeEnum(): QuestionType {
+        return QuestionType.fromString(questionType)
+    }
+
+    /**
+     * Получить закодированное значение для ML
+     */
+    fun getEncodedQuestionType(): Float {
+        return QuestionType.encode(getQuestionTypeEnum())
     }
 }

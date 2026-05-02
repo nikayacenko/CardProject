@@ -46,7 +46,7 @@ class SettingsFragment : Fragment() {
         setupToolbar()
         setupObservers()
         setupClickListeners()
-        loadPreferences()
+//        loadPreferences()
     }
 
     private fun setupToolbar() {
@@ -68,25 +68,25 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.defaultLearningMode.collect { mode ->
-                when (mode) {
-                    LearningMode.LONG_TERM -> binding.longTermMode.isChecked = true
-                    LearningMode.SHORT_TERM -> binding.shortTermMode.isChecked = true
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewModel.defaultLearningMode.collect { mode ->
+//                when (mode) {
+//                    LearningMode.LONG_TERM -> binding.longTermMode.isChecked = true
+//                    LearningMode.SHORT_TERM -> binding.shortTermMode.isChecked = true
+//                }
+//            }
+//        }
     }
 
     private fun updateAIStatus(isReady: Boolean) {
         if (isReady) {
-            binding.aiStatusText.text = "✅ Активна"
+            binding.aiStatusText.text = "Активна"
             binding.aiStatusText.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_500))
-            binding.modelInfoText.text = "Модель загружена: forgetting_model.tflite"
+//            binding.modelInfoText.text = "Модель загружена: forgetting_model.tflite"
         } else {
-            binding.aiStatusText.text = "❌ Не активна (SM-2)"
+            binding.aiStatusText.text = "Не активна (SM-2)"
             binding.aiStatusText.setTextColor(ContextCompat.getColor(requireContext(), R.color.red_500))
-            binding.modelInfoText.text = "Используется базовый алгоритм SM-2"
+//            binding.modelInfoText.text = "Используется базовый алгоритм SM-2"
         }
     }
 
@@ -95,43 +95,43 @@ class SettingsFragment : Fragment() {
             exportData()
         }
 
-        binding.longTermMode.setOnClickListener {
-            viewModel.setDefaultLearningMode(LearningMode.LONG_TERM)
-            showToast("Режим по умолчанию: Долговременный")
-        }
-
-        binding.shortTermMode.setOnClickListener {
-            viewModel.setDefaultLearningMode(LearningMode.SHORT_TERM)
-            showToast("Режим по умолчанию: Краткосрочный")
-        }
-
-        // Обработчик для поля ввода новых карточек
-        binding.newCardsPerDayInput.setOnEditorActionListener { _, _, _ ->
-            saveNewCardsPerDay()
-            true
-        }
-
-        binding.newCardsPerDayInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                saveNewCardsPerDay()
-            }
-        }
+//        binding.longTermMode.setOnClickListener {
+//            viewModel.setDefaultLearningMode(LearningMode.LONG_TERM)
+//            showToast("Режим по умолчанию: Долговременный")
+//        }
+//
+//        binding.shortTermMode.setOnClickListener {
+//            viewModel.setDefaultLearningMode(LearningMode.SHORT_TERM)
+//            showToast("Режим по умолчанию: Краткосрочный")
+//        }
+//
+//        // Обработчик для поля ввода новых карточек
+//        binding.newCardsPerDayInput.setOnEditorActionListener { _, _, _ ->
+//            saveNewCardsPerDay()
+//            true
+//        }
+//
+//        binding.newCardsPerDayInput.setOnFocusChangeListener { _, hasFocus ->
+//            if (!hasFocus) {
+//                saveNewCardsPerDay()
+//            }
+//        }
     }
 
-    private fun saveNewCardsPerDay() {
-        val text = binding.newCardsPerDayInput.text.toString()
-        val value = text.toIntOrNull()
-        if (value != null && value in 1..50) {
-            viewModel.setNewCardsPerDay(value)
-        } else {
-            binding.newCardsPerDayInput.setText(viewModel.newCardsPerDay.value.toString())
-            showToast("Введите число от 1 до 50")
-        }
-    }
+//    private fun saveNewCardsPerDay() {
+//        val text = binding.newCardsPerDayInput.text.toString()
+//        val value = text.toIntOrNull()
+//        if (value != null && value in 1..50) {
+//            viewModel.setNewCardsPerDay(value)
+//        } else {
+//            binding.newCardsPerDayInput.setText(viewModel.newCardsPerDay.value.toString())
+//            showToast("Введите число от 1 до 50")
+//        }
+//    }
 
-    private fun loadPreferences() {
-        binding.newCardsPerDayInput.setText(viewModel.newCardsPerDay.value.toString())
-    }
+//    private fun loadPreferences() {
+//        binding.newCardsPerDayInput.setText(viewModel.newCardsPerDay.value.toString())
+//    }
 
     private fun exportData() {
         viewLifecycleOwner.lifecycleScope.launch {

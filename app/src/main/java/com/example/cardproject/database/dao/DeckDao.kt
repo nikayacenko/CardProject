@@ -32,5 +32,7 @@ interface DeckDao {
 
     @Query("DELETE FROM decks")
     suspend fun deleteAllDecks()
+
+
 }
 

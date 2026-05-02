@@ -72,6 +72,7 @@ dependencies {
     // Room (совместимая версия)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation(libs.core.ktx)
     kapt("androidx.room:room-compiler:2.6.1")
 
     // Hilt (без дубликатов)
@@ -150,6 +151,13 @@ dependencies {
 
     // Для тестирования Room
     testImplementation("androidx.room:room-testing:2.6.1")
+
+    testImplementation("org.robolectric:robolectric:4.10.3")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+
+    implementation("androidx.gridlayout:gridlayout:1.0.0")
+
 }
 
 kapt {

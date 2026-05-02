@@ -44,4 +44,5 @@ interface ReviewLogDao {
     @Query("DELETE FROM review_logs WHERE cardId = :cardId")
     suspend fun deleteByCardId(cardId: Long)
 
+
 }

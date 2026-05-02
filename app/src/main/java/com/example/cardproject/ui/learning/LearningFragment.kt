@@ -109,6 +109,18 @@ class LearningFragment : Fragment() {
                 binding.mlStatusText.text = status
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.learningProgress.collect { progress ->
+                binding.progressText.text = "Всего: ${progress.totalCards} | К изучению: ${progress.newCards + progress.learnedCards} | Изучено: ${progress.learnedCards}"
+
+                // Обновляем прогресс-бар
+                val studied = progress.totalCards - (progress.newCards + progress.learnedCards)
+                binding.cardProgress.progress = if (progress.totalCards > 0) {
+                    (studied * 100 / progress.totalCards).toInt()
+                } else 0
+            }
+        }
     }
     private fun updateFatigueUI(fatigue: Float) {
         // Преобразуем 0.0-1.0 в 0-100 для ProgressBar

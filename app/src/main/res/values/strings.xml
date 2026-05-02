@@ -5,4 +5,9 @@
     <string name="create_deck">Create Deck</string>
     <string name="create_card">Create Card</string>
     <string name="navigate_back">Назад</string>
+    <string-array name="question_types">
+        <item>Факт (FACT) - простой вопрос</item>
+        <item>Определение (DEFINITION) - точное определение</item>
+        <item>Доказательство (PROOF) - сложный вопрос</item>
+    </string-array>
 </resources>

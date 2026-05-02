@@ -19,9 +19,15 @@ class CardRepository @Inject constructor(
         return cardDao.getCardsByDeck(deckId)
     }
 
-    suspend fun createCard(deckId: Long, front: String, back: String): Long {
-        val card = Card(deckId = deckId, front = front, back = back)
-        val id = cardDao.insertCard(card)
+    suspend fun createCard(deckId: Long, front: String, back: String,questionType: String = "FACT"): Long {
+        val card = Card(deckId = deckId, front = front, back = back, questionType = questionType)
+        val cardWithMetadata = card.calculateMetadata()
+        println("📊 Результат после calculateMetadata():")
+        println("   - questionType: ${cardWithMetadata.questionType}")
+        println("   - wordCount: ${cardWithMetadata.wordCount}")
+        println("   - isFormula: ${cardWithMetadata.isFormula}")
+        println("   - difficultyScore: ${cardWithMetadata.difficultyScore}")
+        val id = cardDao.insertCard(cardWithMetadata)
         return id
     }
 

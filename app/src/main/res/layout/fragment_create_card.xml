@@ -13,19 +13,54 @@
         android:textStyle="bold"
         android:layout_marginBottom="24dp" />
 
-    <EditText
-        android:id="@+id/questionEditText"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:hint="Вопрос"
-        android:layout_marginBottom="16dp" />
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
-    <EditText
-        android:id="@+id/answerEditText"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/questionEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="2"
+            android:maxLines="6" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:hint="Ответ"
-        android:layout_marginBottom="24dp" />
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/answerEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="2"
+            android:maxLines="6" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- ПРОСТОЙ СПИННЕР - без TextInputLayout -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Тип вопроса"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/questionTypeSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:entries="@array/question_types"
+        android:background="@android:drawable/editbox_dropdown_dark_frame"
+        android:padding="12dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,7 +73,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Отмена" />
+            android:text="Отмена"
+            style="@style/Widget.Material3.Button.TextButton" />
 
         <Button
             android:id="@+id/saveButton"

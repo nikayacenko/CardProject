@@ -41,7 +41,6 @@ class QuestionType:
 
     @classmethod
     def get_all(cls):
-        # Удалена FORMULA из общего списка типов
         return [cls.FACT, cls.DEFINITION, cls.PROOF]
 
     @classmethod

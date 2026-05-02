@@ -58,5 +58,7 @@ interface SessionStatsDao {
     @Query("SELECT * FROM session_stats WHERE deckId = :deckId ORDER BY date DESC")
     suspend fun getSessionStatsByDeckSync(deckId: Long): List<SessionStats>
 
+    @Query("SELECT * FROM session_stats WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
+    fun getSessionStatsByDateRange(startDate: Long, endDate: Long): Flow<List<SessionStats>>
 
 }

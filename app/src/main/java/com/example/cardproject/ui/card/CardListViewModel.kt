@@ -80,13 +80,13 @@ class CardListViewModel(application: Application) : AndroidViewModel(application
     val cards get() = repository.getCardsByDeck(currentDeckId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun createCard(front: String, back: String) {
+    fun createCard(front: String, back: String,questionType: String = "FACT") {
         viewModelScope.launch {
             println("🔄 Начало создания карточки: deckId=$currentDeckId, front='$front', back='$back'")
 
             if (currentDeckId != -1L) {
                 try {
-                    val cardId = repository.createCard(currentDeckId, front, back)
+                    val cardId = repository.createCard(currentDeckId, front, back,questionType = questionType)
                     println("✅ Карточка создана с ID: $cardId")
 
                     val count = repository.getCardCount(currentDeckId)
