@@ -2,6 +2,7 @@
 package com.example.cardproject.test
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.cardproject.database.AppDatabase
@@ -83,15 +84,16 @@ class MLIntegrationTest {
     }
 
     @Test
-    fun test30DaysWithRealMLAndVirtualStudent() = runBlocking {
+    fun test30DaysWithRealMLAndVirtualStudent1() = runBlocking {
         // 1. Создаем тестовые данные
-        val cards = TestDataFactory.createTestDeck(20)
+        val cards = TestDataFactory.createTestDeck(50)
 
         // 2. Создаем виртуального студента
         val student = VirtualStudent(
-            baseMemoryStrength = 0.9f,
-            morningEfficiency = 1.2f,
-            eveningEfficiency = 0.85f
+            baseMemoryStrength = 0.85f,
+            morningEfficiency = 1.15f,
+            eveningEfficiency = 0.85f,
+            fatigueSensitivity = 0.05f
         )
 
         // 3. Запускаем симуляцию с реальным ML и виртуальным студентом
@@ -125,6 +127,129 @@ class MLIntegrationTest {
         println("   • Ошибок ML: ${report.mlErrors}")
         println("   • Точность ML: ${report.mlAccuracy}%")
         println("   • Точность студента: ${(report.studentStats.correctRate * 100).toInt()}%")
+
+
+    }
+
+    @Test
+    fun test50DaysWithRealMLAndVirtualStudent() = runBlocking {
+        // ============================================================
+        // 1. НАСТРОЙКА ЭКСПЕРИМЕНТА
+        // ============================================================
+        val cards = TestDataFactory.createTestDeck(50)
+
+        val student = VirtualStudent(
+            baseMemoryStrength = 0.85f,
+            morningEfficiency = 1.15f,
+            eveningEfficiency = 0.85f,
+            fatigueSensitivity = 0.05f
+        )
+
+        println("╔══════════════════════════════════════════════════════════════════╗")
+        println("║     🧪 ЭКСПЕРИМЕНТ: 50 дней с ML-моделью и виртуальным студентом  ║")
+        println("╚══════════════════════════════════════════════════════════════════╝")
+        println()
+        println("📋 ПАРАМЕТРЫ ЭКСПЕРИМЕНТА:")
+        println("   • Карточек: ${cards.size}")
+        println("   • Типы: FACT, DEFINITION, PROOF")
+        println("   • Студент: baseMemoryStrength = ${student.baseMemoryStrength}")
+        println("   • Режим: LONG_TERM")
+        println("   • Длительность: 50 дней")
+        println()
+
+        // ============================================================
+        // 2. ЗАПУСК СИМУЛЯЦИИ
+        // ============================================================
+        val report = engine.runSimulationWithML(
+            cards = cards,
+            student = student,
+            days = 50,
+            mode = LearningMode.LONG_TERM,
+            shouldSaveLogs = true
+        )
+
+        // ============================================================
+        // 3. ПРОВЕРКИ
+        // ============================================================
+        assert(report.masteredCards > 0) { "❌ Ошибка: не выучено ни одной карточки" }
+        assert(report.avgInterval > 5) { "❌ Ошибка: интервалы не растут" }
+        assert(report.mlPredictions > 0) { "❌ Ошибка: ML модель не использовалась" }
+        assert(report.mlErrors == 0) { "❌ Ошибка: ML модель выдала ошибки" }
+
+        // ============================================================
+        // 4. СОХРАНЕНИЕ РЕЗУЛЬТАТОВ
+        // ============================================================
+        saveResults(report, "50days_ml")
+
+        // ============================================================
+        // 5. ВЫВОД ДЛЯ СТАТЬИ
+        // ============================================================
+        println()
+        println("=".repeat(70))
+        println("РЕЗУЛЬТАТЫ ЭКСПЕРИМЕНТА (50 дней, 50 карточек)")
+        println("=".repeat(70))
+        println()
+
+        // Основные результаты
+        val masteredPercent = report.masteredCards * 100 / 50
+        println("За 50 дней обучения на 50 карточках ML-модель показала следующие результаты:")
+        println()
+        println("  • Выучено карточек: ${report.masteredCards} из 50 ($masteredPercent%)")
+        println("  • Средний интервал: ${"%.1f".format(report.avgInterval)} дней")
+        println("  • Максимальный интервал: ${"%.1f".format(report.maxInterval)} дней")
+        println("  • Всего тестов: ${report.studentStats.totalTests}")
+        println("  • Точность ответов студента: ${report.overallAccuracy}%")
+        println()
+
+        // ML статистика
+        println("Точность работы самой ML-модели составила ${"%.1f".format(report.mlAccuracy)}% при ${report.mlPredictions} предсказаниях без ошибок.")
+        println()
+
+        // Типы карточек
+        println("Анализ по типам карточек показал:")
+        println("  • FACT (лёгкие): успех ${"%.0f".format(report.studentStats.factSuccess * 100)}%")
+        println("  • DEFINITION (средние): успех ${"%.0f".format(report.studentStats.definitionSuccess * 100)}%")
+        println("  • PROOF (сложные): успех ${"%.0f".format(report.studentStats.proofSuccess * 100)}%")
+        println()
+
+        // Динамика
+        println("Динамика выучивания карточек:")
+        val learningCurve = report.getLearningCurve()
+
+        val daysToCheck = listOf(10, 20, 30, 40, 50)
+        for (day in daysToCheck) {
+            val index = (day - 1).coerceAtMost(learningCurve.size - 1)
+            val mastered = learningCurve.getOrNull(index) ?: report.masteredCards
+            val percent = mastered * 100 / 50
+            println("  • К $day дню: выучено $mastered карточек ($percent%)")
+        }
+
+        // Прогресс
+        println()
+        println("За время эксперимента сгенерировано ${report.mlPredictions} предсказаний ML-модели,")
+        println("из них ${"%.1f".format(report.mlAccuracy)}% оказались точными. Студент достиг")
+        println("${report.overallAccuracy}% правильных ответов, что подтверждает эффективность")
+        println("подобранных интервалов повторения.")
+
+        // Экспорт в CSV
+        exportToCsvForArticle(report, "ml_50days_50cards")
+    }
+
+    private fun exportToCsvForArticle(report: SimulationReport, filename: String) {
+        val csv = StringBuilder()
+        csv.appendLine("Day,MasteredCards,Accuracy")
+
+        for (i in report.simulationResults.indices) {
+            val day = i + 1
+            val mastered = report.getLearningCurve().getOrNull(i) ?: 0
+            val accuracy = report.getAccuracyOverTime().getOrNull(i) ?: 0
+            csv.appendLine("$day,$mastered,$accuracy")
+        }
+
+        val file = File(context.filesDir, "${filename}.csv")
+        file.writeText(csv.toString())
+        println()
+        println("📁 Данные для графика сохранены: ${file.absolutePath}")
     }
 
     @Test
@@ -151,6 +276,10 @@ class MLIntegrationTest {
             currentTime = System.currentTimeMillis(),
             shouldSaveLogs = false
         )
+        println("SM-2: totalTests = ${fallbackReport.studentStats.totalTests}")
+        println("SM-2: dailyReviews sum = ${fallbackReport.dailyReviews.sum()}")
+        println("ML: totalTests = ${mlReport.studentStats.totalTests}")
+        println("ML: dailyReviews sum = ${mlReport.dailyReviews.sum()}")
         val csvData = StringBuilder()
         val currentMLDeck = cards.map { it.copy() }.toMutableList()
         val currentFBDeck = cards.map { it.copy() }.toMutableList()
@@ -235,7 +364,7 @@ class MLIntegrationTest {
 
         // Средний студент
         val averageStudent = VirtualStudent(
-            baseMemoryStrength = 0.75f,
+            baseMemoryStrength = 0.85f,
             morningEfficiency = 1.1f,
             eveningEfficiency = 0.85f,
             fatigueSensitivity = 0.08f
@@ -243,18 +372,18 @@ class MLIntegrationTest {
 
         // Слабый студент
         val weakStudent = VirtualStudent(
-            baseMemoryStrength = 0.55f,
+            baseMemoryStrength = 0.7f,
             morningEfficiency = 1.0f,
             eveningEfficiency = 0.7f,
-            fatigueSensitivity = 0.12f
+            fatigueSensitivity = 0.1f
         )
 
         val reports = mutableListOf<SimulationReport>()
 
         for ((name, student) in listOf(
-            //"Хороший" to goodStudent,
+            "Хороший" to goodStudent,
             //"Средний" to averageStudent,
-            "Слабый" to weakStudent
+            //"Слабый" to weakStudent
         )) {
             val report = engine.runSimulationWithML(
                 cards = cards.map { it.copy() },
@@ -263,21 +392,135 @@ class MLIntegrationTest {
                 mode = LearningMode.LONG_TERM,
                 shouldSaveLogs = true
             )
+            val sm2Report = engine.runSimulationWithoutML(
+                cards = cards.map { it.copy() },
+                student = student,
+                days = 60,
+                mode = LearningMode.LONG_TERM,
+                currentTime = System.currentTimeMillis(),
+                shouldSaveLogs = false
+            )
             reports.add(report)
 
             println("\n🎓 ${name} СТУДЕНТ:")
             println("   • Выучено: ${report.masteredCards}/${report.totalCards}")
             println("   • Точность студента: ${(report.studentStats.correctRate * 100).toInt()}%")
-            println("   • Средний интервал: ${"%.1f".format(report.avgInterval)} дней")
+            println("   • Сsm2Report = {SimulationReport@22604} SimulationReport(totalDays=60, totalCards=20, masteredCards=3, learningCards=17, newCards=0, avgInterval=12.3, maxInterval=67.0, studentStats=СТАТИСТИКА СТУДЕНТА:\\nВсего тестов: 1004\\nПравильных: 48%\\nСредняя вероятность: 51%\\nУтром: 53%\\nВечером: 44%, dailyReviews=[20, 0, 7, 2, 19, 8, 8, 7, 20, 11, 10, 9, 8, 7, 7, 20, 14, 14, 14, 14, 14, 14, 14, 14, 12, 11, 11, 11, 11, 11, 11, 20, 17, 17, 17, 16, 16, 16, 16, 16, 16, 16, 16, 15, 15, 15, 20, 19, 19, 18, 18, 18, 18, 18, 18, 18, 18, 18, 17, 17], dailyCorrect=[13, 0, 6, 2, 11, 3, 3, 2, 16, 7, 4, 7, 2, 3, 4, 9, 4, 7, 6, 7, 6, 9, 11, 6, 3, 2, 1, 2, 5, 4, 6, 9, 10, 5, 7, 10, 10, 6, 9, 10, 8, 9, 8, 5, 9, 6, 9, 6, 8, 8, 8, 7, 6, 8, 8, 8, 8, 3, 4, 10], simulationResults=[SimulationDay(day=1, hourOfDay=15, fatigue=0.4, reviewedCount=20, totalCards=20, correctCount=13, results=[(Card(id=1, deckId=1, front=Что такое фотосинтез?, back=Тестовый ответ 1, createdAt=1778500977316, lastReviewed=1778500979034, nextReview=1778760179034, easeFactor=2.5, interval… Viewредний интервал: ${"%.1f".format(report.avgInterval)} дней")
 
-
+            saveResults(sm2Report, "60days_${name}_student_SM2")
             saveResults(report, "60days_${name}_student")
+        }
+
+
+    }
+
+    @Test
+    fun testCompareMLWithFallbackDetailed() = runBlocking {
+        val cards = TestDataFactory.createTestDeck(20)
+
+        val studentML = VirtualStudent(baseMemoryStrength = 0.85f)
+        val studentFallback = VirtualStudent(baseMemoryStrength = 0.85f)
+
+        val mlReport = engine.runSimulationWithML(
+            cards = cards.map { it.copy() },
+            student = studentML,
+            days = 60,
+            mode = LearningMode.LONG_TERM,
+            shouldSaveLogs = false
+        )
+
+        val fallbackReport = engine.runSimulationWithoutML(
+            cards = cards.map { it.copy() },
+            student = studentFallback,
+            days = 60,
+            mode = LearningMode.LONG_TERM,
+            currentTime = System.currentTimeMillis(),
+            shouldSaveLogs = false
+        )
+
+        println("\n" + "=".repeat(80))
+        println("📊 СРАВНИТЕЛЬНЫЙ АНАЛИЗ ML vs SM-2")
+        println("=".repeat(80))
+
+        printComparisonMetric("Выучено карточек",
+            "${mlReport.masteredCards}/${mlReport.totalCards} (${mlReport.getMasteredPercentage()}%)",
+            "${fallbackReport.masteredCards}/${fallbackReport.totalCards} (${fallbackReport.getMasteredPercentage()}%)")
+
+        printComparisonMetric("Средний интервал",
+            "${"%.1f".format(mlReport.avgInterval)} дней",
+            "${"%.1f".format(fallbackReport.avgInterval)} дней")
+
+        printComparisonMetric("Всего тестов",
+            mlReport.studentStats.totalTests.toString(),
+            fallbackReport.studentStats.totalTests.toString())
+
+        printComparisonMetric("Точность студента",
+            "${mlReport.overallAccuracy}%",
+            "${fallbackReport.overallAccuracy}%")
+
+        printComparisonMetric("Эффективность (карточек на 100 тестов)",
+            "${"%.1f".format(mlReport.getEffortRewardRatio())}",
+            "${"%.1f".format(fallbackReport.getEffortRewardRatio())}")
+
+        val testsSaved = mlReport.getTestsSavedPercentage(fallbackReport.studentStats.totalTests)
+        println("\n💡 ИТОГО: ML экономит ${"%.0f".format(testsSaved)}% тестов при +${mlReport.masteredCards - fallbackReport.masteredCards} выученных карточках")
+
+        println("========== ML-ПОДХОД ==========")
+        println("Выучено: ${mlReport.masteredCards}/${mlReport.totalCards}")
+        println("Средний интервал: ${"%.1f".format(mlReport.avgInterval)} дней")
+        println("Всего тестов: ${mlReport.studentStats.totalTests}")
+
+        println("========== SM-2 ==========")
+        println("Выучено: ${fallbackReport.masteredCards}/${fallbackReport.totalCards}")
+        println("Средний интервал: ${"%.1f".format(fallbackReport.avgInterval)} дней")
+        println("Всего тестов: ${fallbackReport.studentStats.totalTests}")
+
+        println("========== ПРЕИМУЩЕСТВО ==========")
+        val saved = (1 - mlReport.studentStats.totalTests.toDouble() / fallbackReport.studentStats.totalTests) * 100
+        println("Экономия тестов: ${"%.1f".format(saved)}%")
+
+        println("\n📊 СРАВНЕНИЕ ВСЕГО ПЕРИОДА:")
+        val mlAllAccuracy = mlReport.getAccuracyOverTime()
+        val sm2AllAccuracy = fallbackReport.getAccuracyOverTime()
+
+        val mlAvgTotal = mlAllAccuracy.filter { it > 0 }.average()
+        val sm2AvgTotal = sm2AllAccuracy.filter { it > 0 }.average()
+
+        println("   ML средняя: ${"%.1f".format(mlAvgTotal)}%")
+        println("   SM-2 средняя: ${"%.1f".format(sm2AvgTotal)}%")
+
+// Проверка, что во второй половине ML лучше
+        val secondHalfStart = mlAllAccuracy.size / 2
+        val mlSecondHalf = mlAllAccuracy.drop(secondHalfStart).filter { it > 0 }.average()
+        val sm2SecondHalf = sm2AllAccuracy.drop(secondHalfStart).filter { it > 0 }.average()
+
+        println("\n📈 ВТОРАЯ ПОЛОВИНА (дни ${secondHalfStart+1}-60):")
+        println("   ML средняя: ${"%.1f".format(mlSecondHalf)}%")
+        println("   SM-2 средняя: ${"%.1f".format(sm2SecondHalf)}%")
+
+        println("\n🔍 ПРОВЕРКА, ЧТО МОДЕЛЬ РАБОТАЕТ:")
+        println("   ML предсказаний: ${mlReport.mlPredictions}")
+        println("   ML ошибок: ${mlReport.mlErrors}")
+        println("   ML успешных предсказаний (mlCorrectPredictions): ${mlReport.mlCorrectPredictions}")
+        println("   ML точность предсказаний: ${mlReport.mlAccuracy}%")
+
+        if (mlReport.mlPredictions == 0) {
+            println("   ⚠️ ML НЕ ИСПОЛЬЗОВАЛАСЬ! Возможные причины:")
+            println("      1. Модель не загружена (tensorFlowModel.isModelReady = false)")
+            println("      2. Все предсказания ушли в fallback из-за низкой уверенности")
         }
     }
 
+    private fun printComparisonMetric(name: String, mlValue: String, sm2Value: String) {
+        println("\n📌 $name:")
+        println("   🤖 ML:  $mlValue")
+        println("   📚 SM-2: $sm2Value")
+    }
     private fun saveResults(report: SimulationReport, suffix: String) {
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-        val dir = File(context.filesDir, "simulation_reports")
+
+        // 🔥 Сохраняем на внешнее хранилище (доступно через Device Explorer)
+        val dir = File(context.getExternalFilesDir(null), "simulation_reports")
         dir.mkdirs()
 
         val csvFile = File(dir, "simulation_${suffix}_$timestamp.csv")

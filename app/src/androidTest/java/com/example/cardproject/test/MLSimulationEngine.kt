@@ -7,8 +7,12 @@ import com.example.cardproject.ml.MLSpacedRepetitionCalculator
 import com.example.cardproject.model.AIContext
 import com.example.cardproject.model.Card
 import com.example.cardproject.model.LearningMode
+import com.example.cardproject.model.MLPrediction
 import com.example.cardproject.model.ReviewLog
 import kotlinx.coroutines.delay
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class MLSimulationEngine {
 
@@ -19,7 +23,9 @@ class MLSimulationEngine {
     private var mlPredictions = 0
     private var mlErrors = 0
     private var mlSuccesses = 0
-
+    // Добавить правильные счётчики
+    private var mlCorrectPredictions = 0   // Правильные предсказания
+    private var mlTotalPredictions = 0     // Всего предсказаний
     /**
      * Инициализация с реальным ML калькулятором
      */
@@ -89,12 +95,11 @@ class MLSimulationEngine {
 
         val report = generateReport(activeCards, student)
 
-        println("\n" + report.getFullReport())
         println("\n🤖 ML СТАТИСТИКА:")
         println("   • Предсказаний: $mlPredictions")
         println("   • Ошибок: $mlErrors")
-        println("   • Успешно: $mlSuccesses")
-        println("   • Точность: ${"%.1f".format(mlAccuracy())}%")
+        println("   • Правильных предсказаний: $mlCorrectPredictions")
+        println("   • Точность ML: ${"%.1f".format(mlAccuracy())}%")
 
         return report
     }
@@ -155,6 +160,11 @@ class MLSimulationEngine {
 
         val reviewedCards = mutableListOf<Card>()
         val results = mutableListOf<Pair<Card, Boolean>>()
+        val predictionsHistory = mutableListOf<Pair<MLPrediction, Boolean>>() // Для подсчёта точности
+
+        var dayMlPredictions = 0
+        var dayMlCorrectPredictions = 0
+
 
         // Определяем время дня
         val hourOfDay = when (day % 3) {
@@ -182,25 +192,21 @@ class MLSimulationEngine {
             learningMode = mode
         )
         val dayMs = 24 * 60 * 60 * 1000L
+
         for (card in cards) {
             // Проверяем, пришло ли время повторять
             val shouldReview = card.nextReview == null || card.nextReview!! <= currentTime
 
             if (shouldReview) {
-                // Исправленный расчет интервала
                 val lastReviewedTime = card.lastReviewed ?: (currentTime - dayMs)
                 val diffMs = currentTime - lastReviewedTime
-
-                // Важно: переводим мс в дни правильно
                 val actualIntervalDays = (diffMs.toFloat() / dayMs.toFloat()).coerceAtLeast(0f)
-
-                // Логируем для отладки (теперь тут будет 1.0, а не 8.64E7)
-                Log.d("SIM_DEBUG", "День $day: Карточка ${card.id} | Интервал: %.2f дн.".format(actualIntervalDays))
 
                 val questionType = com.example.cardproject.model.QuestionType.fromString(card.questionType)
 
                 // Виртуальный студент пытается вспомнить
                 val wasCorrect = student.tryToRecall(
+                    cardId = card.id,
                     intervalDays = actualIntervalDays,
                     hourOfDay = hourOfDay,
                     fatigue = fatigue,
@@ -212,9 +218,10 @@ class MLSimulationEngine {
 
                 try {
                     mlPredictions++
+                    mlTotalPredictions++
+                    dayMlPredictions++
 
-                    // ИСПОЛЬЗУЕМ РЕАЛЬНЫЙ ML КАЛЬКУЛЯТОР
-                    val updatedCard = mlCalculator.calculateNextReviewWithoutSaving(
+                    val (updatedCard, prediction) = mlCalculator.calculateNextReviewWithPrediction(
                         card = card,
                         context = context.copy(
                             sessionStartTime = currentTime,
@@ -226,7 +233,17 @@ class MLSimulationEngine {
                         responseTimeMs = responseTime
                     )
 
-                    mlSuccesses++
+                    // Модель предсказывает вероятность забывания (0-1)
+                    val predictedForgetting = prediction.forgettingProbability
+
+                    // Реальный результат: 1 = забыл (неправильно), 0 = вспомнил (правильно)
+                    val actualForgetting = if (!wasCorrect) 1f else 0f
+
+                    // Считаем предсказание правильным, если ошибка меньше порога (например, 0.3)
+                    val predictionError = Math.abs(predictedForgetting - actualForgetting)
+                    if (predictionError < 0.5f) {
+                        mlCorrectPredictions++
+                    }
 
                     val index = cards.indexOfFirst { it.id == card.id }
                     if (index >= 0) {
@@ -274,6 +291,7 @@ class MLSimulationEngine {
         currentTime: Long
     ): SimulationDay {
 
+        val oneDayMs = 24 * 60 * 60 * 1000L
         val reviewedCards = mutableListOf<Card>()
         val results = mutableListOf<Pair<Card, Boolean>>()
 
@@ -387,10 +405,11 @@ class MLSimulationEngine {
                 totalReviews = card.totalReviews + 1
             )
         } else {
+            val newInterval = max(1.0, card.interval * 0.5)
             card.copy(
                 lastReviewed = System.currentTimeMillis(),
                 nextReview = System.currentTimeMillis() + (24 * 60 * 60 * 1000L),
-                interval = 1.0,
+                interval = newInterval,
                 consecutiveCorrect = 0,
                 totalReviews = card.totalReviews + 1
             )
@@ -434,13 +453,15 @@ class MLSimulationEngine {
             mlPredictions = mlPredictions,
             mlErrors = mlErrors,
             mlSuccesses = mlSuccesses,
-            overallAccuracy = overallAccuracy
+            overallAccuracy = overallAccuracy,
+            mlCorrectPredictions = mlCorrectPredictions,
+            mlTotalPredictions = mlTotalPredictions
         )
     }
 
     private fun mlAccuracy(): Double {
-        return if (mlPredictions > 0) {
-            (mlSuccesses.toDouble() / mlPredictions) * 100
+        return if (mlTotalPredictions > 0) {
+            (mlCorrectPredictions.toDouble() / mlTotalPredictions) * 100
         } else 0.0
     }
 
@@ -480,13 +501,18 @@ data class SimulationReport(
     val mlPredictions: Int = 0,
     val mlErrors: Int = 0,
     val mlSuccesses: Int = 0,
-    val overallAccuracy: Int = 0
+    val overallAccuracy: Int = 0,
+    val mlCorrectPredictions: Int = 0,
+    val mlTotalPredictions: Int = 0
 ) {
     val mlAccuracy: Double
-        get() = if (mlPredictions > 0) {
-            (mlSuccesses.toDouble() / mlPredictions) * 100
+        get() = if (mlTotalPredictions > 0) {
+            (mlCorrectPredictions.toDouble() / mlTotalPredictions) * 100
         } else 0.0
     fun getFullReport(): String {
+        val effortReward = getEffortRewardRatio()
+        val stability = getIntervalStability()
+        val masteredPercent = getMasteredPercentage()
         return """
             
             📊 ИТОГОВЫЙ ОТЧЕТ СИМУЛЯЦИИ
@@ -536,5 +562,63 @@ data class SimulationReport(
         return simulationResults.map { day ->
             day.results.count { it.first.interval > 30 }
         }
+    }
+    fun getEffortRewardRatio(): Double {
+        return if (studentStats.totalTests > 0) {
+            (masteredCards.toDouble() / studentStats.totalTests) * 100
+        } else 0.0
+    }
+
+    /**
+     * 2. Кривая обучения (прогресс выучивания по дням)
+     */
+    fun getLearningCurve(): List<Int> {
+        var mastered = 0
+        return simulationResults.map { day ->
+            mastered += day.results.count { it.first.interval > 30 }
+            mastered
+        }
+    }
+
+    /**
+     * 3. Ретеншн (точность) по дням (для построения графика)
+     */
+    fun getAccuracyOverTime(): List<Int> {
+        return simulationResults.map { day ->
+            if (day.results.isNotEmpty()) {
+                (day.correctCount * 100 / day.reviewedCount)
+            } else 0
+        }
+    }
+
+    /**
+     * 4. Коэффициент стабильности интервалов
+     */
+    fun getIntervalStability(): Double {
+        val intervals = simulationResults.flatMap { day ->
+            day.results.map { it.first.interval }
+        }.filter { it > 0 }
+
+        if (intervals.isEmpty()) return 0.0
+        val mean = intervals.average()
+        val variance = intervals.map { (it - mean).pow(2) }.average()
+        val stdDev = sqrt(variance)
+        return if (mean > 0) stdDev / mean else 0.0
+    }
+
+    /**
+     * 5. Прогресс по выученным карточкам в процентах
+     */
+    fun getMasteredPercentage(): Int {
+        return (masteredCards * 100 / totalCards)
+    }
+
+    /**
+     * 6. Экономия тестов по сравнению с SM-2 (для сравнения)
+     */
+    fun getTestsSavedPercentage(sm2TotalTests: Int): Double {
+        return if (sm2TotalTests > 0) {
+            ((sm2TotalTests - studentStats.totalTests).toDouble() / sm2TotalTests) * 100
+        } else 0.0
     }
 }

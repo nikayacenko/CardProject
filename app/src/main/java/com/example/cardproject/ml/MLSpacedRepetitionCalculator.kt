@@ -91,6 +91,66 @@ class MLSpacedRepetitionCalculator @Inject constructor(
         )
     }
 
+    // Добавьте метод, возвращающий предсказание
+    suspend fun calculateNextReviewWithPrediction(
+        card: Card,
+        context: AIContext,
+        learningMode: LearningMode,
+        quality: Int,
+        responseTimeMs: Long
+    ): Pair<Card, MLPrediction> {
+
+        val correctRate = card.successRate
+        val virtualNow = context.sessionStartTime
+
+        val log = ReviewLog.from(
+            card = card,
+            context = context,
+            quality = quality,
+            responseTimeMs = responseTimeMs,
+            correctRateBefore = correctRate,
+            linkedCardsMastery = 0.5f
+        )
+
+        if (quality == 0) {
+            val updatedCard = handleIncorrectAnswer(card, learningMode, virtualNow)
+            // При ошибке возвращаем дефолтное предсказание
+            return updatedCard to MLPrediction(1.0f, 0.5f, 0.0f, true)
+        }
+
+        val prediction = if (tfliteModel.isModelReady.value) {
+            tfliteModel.predict(log)
+        } else {
+            MLPrediction(0.5f, 1.0f, 0.0f, true)
+        }
+
+        val nextInterval = calculateIntervalWithoutSaving(
+            card = card,
+            prediction = prediction,
+            learningMode = learningMode,
+            fatigue = context.userFatigueLevel,
+            responseTimeMs = responseTimeMs
+        )
+
+        val safeInterval = nextInterval.coerceAtLeast(0.1)
+        val intervalMs = when (learningMode) {
+            LearningMode.LONG_TERM -> (safeInterval * 24 * 60 * 60 * 1000L).toLong()
+            LearningMode.SHORT_TERM -> (safeInterval * 60 * 60 * 1000L).toLong()
+        }
+
+        val updatedCard = card.copy(
+            lastReviewed = virtualNow,
+            nextReview = virtualNow + intervalMs,
+            interval = nextInterval,
+            reviewStage = card.reviewStage + 1,
+            consecutiveCorrect = card.consecutiveCorrect + 1,
+            easeFactor = calculateEaseFactor(card, prediction),
+            totalReviews = card.totalReviews + 1
+        )
+
+        return updatedCard to prediction
+    }
+
     /**
      * Расчет интервала на основе ML предсказания
      */

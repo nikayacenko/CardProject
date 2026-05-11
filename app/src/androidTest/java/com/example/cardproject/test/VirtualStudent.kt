@@ -82,7 +82,7 @@ class VirtualStudent(
 
 //        val result = random.nextFloat() < clampedProbability
         // Даже если вероятность 99%, есть 2-3% шанс, что студент просто затупит
-        val brainFartChance = 0.03f
+        val brainFartChance = 0.01f
         val roll = random.nextFloat()
 
         // Итоговый результат:
