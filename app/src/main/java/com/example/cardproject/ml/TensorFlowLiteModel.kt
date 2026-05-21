@@ -43,10 +43,10 @@ open class TensorFlowLiteModel @Inject constructor(
             val modelFile = FileUtil.loadMappedFile(context, "forgetting_model.tflite")
             interpreter = Interpreter(modelFile)
             _isModelReady.value = true
-            println("✅ Модель TensorFlow Lite загружена")
-            Log.d("TFLite", "✅ Model loaded successfully")
+            println(" Модель TensorFlow Lite загружена")
+            Log.d("TFLite", " Model loaded successfully")
         } catch (e: Exception) {
-            println("❌ Ошибка загрузки модели: ${e.message}")
+            println(" Ошибка загрузки модели: ${e.message}")
             _isModelReady.value = false
         }
     }
@@ -64,7 +64,7 @@ open class TensorFlowLiteModel @Inject constructor(
             // 1. Преобразуем признаки в вектор
             val inputFeatures = extractFeatures(log)
             if (inputFeatures.size != 20) {
-                println("❌ Ошибка: ожидается 20 признаков, получено ${inputFeatures.size}")
+                println(" Ошибка: ожидается 20 признаков, получено ${inputFeatures.size}")
                 return MLPrediction(0.5f, 1.0f, 0.0f, true)
             }
             // 2. Подготавливаем входной тензор
@@ -158,10 +158,10 @@ open class TensorFlowLiteModel @Inject constructor(
     private fun extractFeatures(log: ReviewLog): FloatArray {
         return floatArrayOf(
             // Признаки карточки
-            (log.cardTextLength / 1000f).coerceIn(0f, 1f),                   // Нормализованная длина
-            if (log.hasFormulas) 1f else 0f,                // Наличие формул
-            encodeQuestionType(log.questionType),            // Тип вопроса (0-1)
-            log.difficultyScore.coerceIn(0f, 1f),                           // Сложность карточки
+            (log.cardTextLength / 1000f).coerceIn(0f, 1f), // Нормализованная длина
+            if (log.hasFormulas) 1f else 0f, // Наличие формул
+            encodeQuestionType(log.questionType), // Тип вопроса (0-1)
+            log.difficultyScore.coerceIn(0f, 1f), // Сложность карточки
 
             // Контекстные признаки
             (log.responseTimeMs / 30000f).coerceIn(0f, 1f),// Время ответа (0-1)
@@ -206,9 +206,9 @@ open class TensorFlowLiteModel @Inject constructor(
             interpreter?.close()
             interpreter = Interpreter(newModelFile)
             _isModelReady.value = true
-            println("✅ Модель обновлена")
+            println("Модель обновлена")
         } catch (e: Exception) {
-            println("❌ Ошибка обновления модели: ${e.message}")
+            println("Ошибка обновления модели: ${e.message}")
         }
     }
 

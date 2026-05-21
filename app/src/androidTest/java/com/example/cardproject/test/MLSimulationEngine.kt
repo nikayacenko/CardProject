@@ -35,8 +35,8 @@ class MLSimulationEngine {
     ) {
         this.mlCalculator = calculator
 //        this.reviewLogRepository = repository
-        println("✅ Реальный ML калькулятор инициализирован")
-        android.util.Log.d("ML_TEST", "✅ Движок инициализирован. Модель готова: ${calculator != null}")
+        println("Реальный ML калькулятор инициализирован")
+        android.util.Log.d("ML_TEST", "Движок инициализирован. Модель готова: ${calculator != null}")
     }
 
     /**
@@ -51,7 +51,7 @@ class MLSimulationEngine {
     ): SimulationReport {
 
 //        println("=".repeat(60))
-//        println("🚀 СИМУЛЯЦИЯ С РЕАЛЬНЫМ ML И ВИРТУАЛЬНЫМ СТУДЕНТОМ")
+//        println(" СИМУЛЯЦИЯ С РЕАЛЬНЫМ ML И ВИРТУАЛЬНЫМ СТУДЕНТОМ")
 //        println("=".repeat(60))
 //        println("Карточек: ${cards.size}")
 //        println("Режим: $mode")
@@ -95,7 +95,7 @@ class MLSimulationEngine {
 
         val report = generateReport(activeCards, student)
 
-        println("\n🤖 ML СТАТИСТИКА:")
+        println("\n ML СТАТИСТИКА:")
         println("   • Предсказаний: $mlPredictions")
         println("   • Ошибок: $mlErrors")
         println("   • Правильных предсказаний: $mlCorrectPredictions")
@@ -117,7 +117,7 @@ class MLSimulationEngine {
     ): SimulationReport {
 
         println("=".repeat(60))
-        println("🚀 СИМУЛЯЦИЯ БЕЗ ML (FALLBACK)")
+        println(" СИМУЛЯЦИЯ БЕЗ ML (FALLBACK)")
         println("=".repeat(60))
 
         val activeCards = cards.map { it.copy() }.toMutableList()
@@ -253,9 +253,9 @@ class MLSimulationEngine {
                     }
 
                 } catch (e: Exception) {
-                    android.util.Log.e("SIM_DEBUG", "❌ ОШИБКА ML на карточке ${card.id}: ${e.message}")
+                    android.util.Log.e("SIM_DEBUG", " ОШИБКА ML на карточке ${card.id}: ${e.message}")
                     mlErrors++
-                    println("   ❌ Ошибка ML: ${e.message}")
+                    println("    Ошибка ML: ${e.message}")
 
                     // Fallback при ошибке
                     val fallbackCard = fallbackSM2(card, quality, mode)
@@ -481,7 +481,7 @@ data class SimulationDay(
     fun getSummary(): String {
         val percent = if (reviewedCount > 0) correctCount * 100 / reviewedCount else 0
         return String.format(
-            "📅 День %3d | %2d:00 | Усталость: %.0f%% | Повторений: %3d | Правильно: %3d (%d%%)",
+            " День %3d | %2d:00 | Усталость: %.0f%% | Повторений: %3d | Правильно: %3d (%d%%)",
             day, hourOfDay, fatigue * 100, reviewedCount, correctCount, percent
         )
     }
@@ -515,13 +515,13 @@ data class SimulationReport(
         val masteredPercent = getMasteredPercentage()
         return """
             
-            📊 ИТОГОВЫЙ ОТЧЕТ СИМУЛЯЦИИ
+             ИТОГОВЫЙ ОТЧЕТ СИМУЛЯЦИИ
             ==============================
             
             🗓 Период: $totalDays дней
-            🃏 Карточки: $totalCards
+             Карточки: $totalCards
             
-            📈 ПРОГРЕСС:
+             ПРОГРЕСС:
             • Выучено (интервал > 30): $masteredCards (${masteredCards * 100 / totalCards}%)
             • В процессе: $learningCards
             • Новых: $newCards
@@ -530,13 +530,13 @@ data class SimulationReport(
             • Средний: ${"%.1f".format(avgInterval)} дней
             • Максимальный: $maxInterval дней
             
-            📊 ПОВТОРЕНИЯ:
+             ПОВТОРЕНИЯ:
             • Всего: ${dailyReviews.sum()}
             • В среднем в день: ${"%.1f".format(dailyReviews.average())}
             • Правильных: ${dailyCorrect.sum()}
             • Точность: $overallAccuracy%
             
-            🤖 ML СТАТИСТИКА:
+             ML СТАТИСТИКА:
             • Предсказаний: $mlPredictions
             • Ошибок: $mlErrors
             • Успешно: $mlSuccesses

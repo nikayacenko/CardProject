@@ -27,7 +27,7 @@ import com.example.cardproject.model.ReviewLog
         Note::class,
         ReviewLog::class
     ],
-    version = 12, // УВЕЛИЧЬТЕ ВЕРСИЮ ДО 7
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -76,9 +76,6 @@ class VirtualStudent(
 
         val adjustedProbability = finalProbability.coerceIn(0.30f, 0.98f)
 
-        //println("   📊 Интервал=${"%.1f".format(intervalDays)}д, " +
-                //"удержание=${"%.0f".format(retention*100)}%, " +
-                //"вероятность=${"%.0f".format(clampedProbability*100)}%")
 
 //        val result = random.nextFloat() < clampedProbability
         // Даже если вероятность 99%, есть 2-3% шанс, что студент просто затупит

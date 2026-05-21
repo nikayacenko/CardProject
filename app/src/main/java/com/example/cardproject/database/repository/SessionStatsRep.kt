@@ -71,9 +71,9 @@ class SessionStatsRepository @Inject constructor(
 
     fun getCalendarStats(startDate: Long, endDate: Long): Flow<Map<Long, CalendarStats>> {
         return sessionStatsDao.getSessionStatsByDateRange(startDate, endDate).map { sessions ->
-            println("📅 Найдено сессий в диапазоне: ${sessions.size}")
+            println(" Найдено сессий в диапазоне: ${sessions.size}")
             sessions.forEach { session ->
-                println("   📅 Сессия: ${java.util.Date(session.date)}, карточек: ${session.totalCards}")
+                println("    Сессия: ${java.util.Date(session.date)}, карточек: ${session.totalCards}")
             }
 
             sessions.groupBy { getStartOfDay(it.date) }

@@ -486,7 +486,7 @@ class ModelTrainer:
     def save_model(self, path):
         """Сохранение модели в формате Keras"""
         self.model.save(path)
-        print(f"✅ Модель сохранена: {path}")
+        print(f"Модель сохранена: {path}")
 
     def convert_to_tflite(self, model_path, tflite_path):
         """Конвертация в TensorFlow Lite"""
@@ -505,7 +505,7 @@ class ModelTrainer:
         with open(tflite_path, 'wb') as f:
             f.write(tflite_model)
 
-        print(f"✅ TFLite модель сохранена: {tflite_path}")
+        print(f"TFLite модель сохранена: {tflite_path}")
         return tflite_model
 
 # ==================================================
@@ -516,30 +516,30 @@ def main():
     """Главная функция обучения"""
 
     print("="*60)
-    print("🚀 ОБУЧЕНИЕ ML-МОДЕЛИ ДЛЯ ИНТЕРВАЛЬНОГО ПОВТОРЕНИЯ")
+    print("ОБУЧЕНИЕ ML-МОДЕЛИ ДЛЯ ИНТЕРВАЛЬНОГО ПОВТОРЕНИЯ")
     print("="*60)
     print()
 
     # 1. Создание папок
-    print("📁 Создание необходимых папок...")
+    print("Создание необходимых папок...")
     os.makedirs("data", exist_ok=True)
     os.makedirs("models", exist_ok=True)
     os.makedirs(ANDROID_ASSETS_PATH, exist_ok=True)
 
-    print(f"   📂 Папка данных: {os.path.abspath('data')}")
-    print(f"   📂 Папка моделей: {os.path.abspath('models')}")
-    print(f"   📂 Android assets: {ANDROID_ASSETS_PATH}")
+    print(f"    Папка данных: {os.path.abspath('data')}")
+    print(f"    Папка моделей: {os.path.abspath('models')}")
+    print(f"    Android assets: {ANDROID_ASSETS_PATH}")
     print()
 
     # 2. Загрузка или генерация данных
     data_path = 'trash_data/review_logs.csv'
 
     if os.path.exists(data_path):
-        print(f"📂 Загрузка реальных данных из: {data_path}")
+        print(f" Загрузка реальных данных из: {data_path}")
         df = pd.read_csv(data_path)
-        print(f"   ✅ Загружено {len(df)} записей")
+        print(f"    Загружено {len(df)} записей")
     else:
-        print("⚠️  Реальные данные не найдены!")
+        print("⚠  Реальные данные не найдены!")
         response = input("   Сгенерировать синтетические данные? (y/n): ")
 
         if response.lower() == 'y':
@@ -548,31 +548,31 @@ def main():
 
             # Сохранение
             df.to_csv('data/synthetic_data4.csv', index=False, sep=',', decimal='.')
-            print(f"   ✅ Сгенерировано {len(df)} записей")
-            print(f"   💾 Сохранено: {os.path.abspath('data/synthetic_data.csv')}")
+            print(f"    Сгенерировано {len(df)} записей")
+            print(f"    Сохранено: {os.path.abspath('data/synthetic_data.csv')}")
         else:
-            print("❌ Обучение невозможно без данных!")
+            print(" Обучение невозможно без данных!")
             return
 
     print()
-    print(f"📊 Статистика данных:")
+    print(f" Статистика данных:")
     print(f"   - Всего записей: {len(df)}")
     print(f"   - Правильных ответов: {df['wasCorrect'].sum()} ({df['wasCorrect'].mean()*100:.1f}%)")
     print(f"   - С формулами: {df['hasFormulas'].sum()} ({df['hasFormulas'].mean()*100:.1f}%)")
     print()
 
     # 3. Подготовка данных для модели
-    print("🔄 Подготовка признаков...")
+    print(" Подготовка признаков...")
     preprocessor = DataPreprocessor()
     X = preprocessor.prepare_features(df)
     y = preprocessor.prepare_targets(df)
 
-    print(f"   📊 Форма признаков: {X.shape}")
-    print(f"   📊 Форма целевых переменных: {y.shape}")
+    print(f"    Форма признаков: {X.shape}")
+    print(f"    Форма целевых переменных: {y.shape}")
     print()
 
     # 4. Разделение на train/val/test
-    print("🔄 Разделение данных...")
+    print(" Разделение данных...")
     X_temp, X_test, y_temp, y_test = train_test_split(
         X, y, test_size=0.15, random_state=42
     )
@@ -580,16 +580,16 @@ def main():
         X_temp, y_temp, test_size=0.15, random_state=42
     )
 
-    print(f"   🎯 Обучающая выборка: {len(X_train)}")
-    print(f"   🎯 Валидационная выборка: {len(X_val)}")
-    print(f"   🎯 Тестовая выборка: {len(X_test)}")
+    print(f"    Обучающая выборка: {len(X_train)}")
+    print(f"    Валидационная выборка: {len(X_val)}")
+    print(f"    Тестовая выборка: {len(X_test)}")
     print()
 
     # 5. Создание и обучение модели
-    print("🧠 Создание модели...")
+    print(" Создание модели...")
     trainer = ModelTrainer()
 
-    print("🚀 Начало обучения...")
+    print(" Начало обучения...")
     print("-"*60)
 
     model, history = trainer.train(
@@ -599,20 +599,20 @@ def main():
     )
 
     print("-"*60)
-    print("✅ Обучение завершено!")
+    print(" Обучение завершено!")
     print()
 
     # 6. Оценка модели
-    print("📊 Оценка модели...")
+    print(" Оценка модели...")
     metrics = trainer.evaluate(X_test, y_test)
-    print(f"   📉 Loss: {metrics['loss']:.4f}")
-    print(f"   📏 MAE: {metrics['mae']:.4f}")
-    print(f"   📐 MSE: {metrics['mse']:.4f}")
-    print(f"   🎯 Точность: {(1 - metrics['mae']) * 100:.1f}%")
+    print(f"    Loss: {metrics['loss']:.4f}")
+    print(f"    MAE: {metrics['mae']:.4f}")
+    print(f"    MSE: {metrics['mse']:.4f}")
+    print(f"    Точность: {(1 - metrics['mae']) * 100:.1f}%")
     print()
 
     # 7. Сохранение модели
-    print("💾 Сохранение модели...")
+    print(" Сохранение модели...")
 
     # Сохраняем в Keras формате
     keras_path = 'models/forgetting_model.keras'
@@ -627,11 +627,11 @@ def main():
     with open(android_tflite_path, 'wb') as f:
         with open(tflite_path, 'rb') as src:
             f.write(src.read())
-    print(f"   ✅ Скопировано в Android: {android_tflite_path}")
+    print(f"    Скопировано в Android: {android_tflite_path}")
     print()
 
     # 8. Сохранение истории обучения
-    print("📈 Сохранение истории обучения...")
+    print(" Сохранение истории обучения...")
     history_path = 'models/training_history.json'
     with open(history_path, 'w') as f:
         json.dump({
@@ -641,11 +641,11 @@ def main():
             'val_mae': history.history['val_mae']
         }, f, indent=2)
 
-    print(f"   ✅ История сохранена: {history_path}")
+    print(f"    История сохранена: {history_path}")
     print()
 
     # 9. Создание файла с информацией о модели
-    print("📝 Создание метаданных модели...")
+    print(" Создание метаданных модели...")
     metadata = {
         'model_name': 'Forgetting Probability Model',
         'version': '1.0',
@@ -668,21 +668,21 @@ def main():
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"   ✅ Метаданные сохранены: {metadata_path}")
+    print(f"    Метаданные сохранены: {metadata_path}")
     print()
 
     # 10. Финальный отчет
     print("="*60)
-    print("🎉 ОБУЧЕНИЕ ЗАВЕРШЕНО УСПЕШНО!")
+    print(" ОБУЧЕНИЕ ЗАВЕРШЕНО УСПЕШНО!")
     print("="*60)
     print(f"""
-    📊 ИТОГИ:
+     ИТОГИ:
     ---------
     • Датасет: {len(df)} записей
     • Точность модели: {(1 - metrics['mae']) * 100:.1f}%
     • MAE: {metrics['mae']:.4f}
     
-    📁 ФАЙЛЫ:
+     ФАЙЛЫ:
     ---------
     • Модель Keras: {os.path.abspath('models/forgetting_model.keras')}
     • Модель TFLite: {os.path.abspath('models/forgetting_model.tflite')}
@@ -690,7 +690,7 @@ def main():
     • История: {os.path.abspath('models/training_history.json')}
     • Метаданные: {os.path.abspath('models/model_metadata.json')}
     
-    🚀 ДАЛЬНЕЙШИЕ ДЕЙСТВИЯ:
+     ДАЛЬНЕЙШИЕ ДЕЙСТВИЯ:
     ------------------------
     1. Пересоберите Android проект
     2. Модель автоматически загрузится из assets

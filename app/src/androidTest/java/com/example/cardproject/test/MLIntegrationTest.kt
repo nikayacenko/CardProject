@@ -46,11 +46,11 @@ class MLIntegrationTest {
         tensorFlowModel = TensorFlowLiteModel(context)
 
         // Проверяем модель
-        println("🤖 Модель загружена: ${tensorFlowModel.isModelReady.value}")
+        println("Модель загружена: ${tensorFlowModel.isModelReady.value}")
         if (tensorFlowModel.isModelReady.value) {
             // Тестируем один вызов
             val testFeatures = FloatArray(20) { 0.5f }
-            println("✅ Модель готова, 20 признаков")
+            println("Модель готова, 20 признаков")
         }
         // Создаем ML калькулятор с реальными зависимостями
         mlCalculator = MLSpacedRepetitionCalculator(
@@ -63,7 +63,7 @@ class MLIntegrationTest {
             initializeWithRealML(mlCalculator)
         }
 
-        println("✅ Настройка завершена")
+        println("Настройка завершена")
         println("   ML модель загружена: ${tensorFlowModel.isModelReady.value}")
     }
 
@@ -305,7 +305,7 @@ class MLIntegrationTest {
                 println("   [Карта ${card.id}]")
                 println("   -> ML адаптировался и поставил: ${"%.1f".format(mlNextInterval)} дн.")
                 println("   -> Fallback поставил бы: ${"%.1f".format(fallbackHypothesis)} дн.")
-                println("   -> Результат: ${if(success) "✅ УСПЕХ" else "❌ ПРОВАЛ"}")
+                println("   -> Результат: ${if(success) "УСПЕХ" else "ПРОВАЛ"}")
                 println("---")
             }
 
@@ -328,15 +328,15 @@ class MLIntegrationTest {
         println(csvData.toString())
         println("@@@_END_@@@")
         println("\n" + "=".repeat(60))
-        println("📊 СРАВНЕНИЕ РЕЖИМОВ")
+        println("СРАВНЕНИЕ РЕЖИМОВ")
         println("=".repeat(60))
 
-        println("\n🤖 С РЕАЛЬНЫМ ML:")
+        println("\nС РЕАЛЬНЫМ ML:")
         println("   • Выучено: ${mlReport.masteredCards}/${mlReport.totalCards}")
         println("   • Средний интервал: ${"%.1f".format(mlReport.avgInterval)} дней")
         println("   • Точность студента: ${(mlReport.studentStats.correctRate * 100).toInt()}%")
 
-        println("\n📚 БЕЗ ML (FALLBACK):")
+        println("\nБЕЗ ML (FALLBACK):")
         println("   • Выучено: ${fallbackReport.masteredCards}/${fallbackReport.totalCards}")
         println("   • Средний интервал: ${"%.1f".format(fallbackReport.avgInterval)} дней")
         println("   • Точность студента: ${(fallbackReport.studentStats.correctRate * 100).toInt()}%")
@@ -439,7 +439,7 @@ class MLIntegrationTest {
         )
 
         println("\n" + "=".repeat(80))
-        println("📊 СРАВНИТЕЛЬНЫЙ АНАЛИЗ ML vs SM-2")
+        println("СРАВНИТЕЛЬНЫЙ АНАЛИЗ ML vs SM-2")
         println("=".repeat(80))
 
         printComparisonMetric("Выучено карточек",
@@ -463,7 +463,7 @@ class MLIntegrationTest {
             "${"%.1f".format(fallbackReport.getEffortRewardRatio())}")
 
         val testsSaved = mlReport.getTestsSavedPercentage(fallbackReport.studentStats.totalTests)
-        println("\n💡 ИТОГО: ML экономит ${"%.0f".format(testsSaved)}% тестов при +${mlReport.masteredCards - fallbackReport.masteredCards} выученных карточках")
+        println("\nИТОГО: ML экономит ${"%.0f".format(testsSaved)}% тестов при +${mlReport.masteredCards - fallbackReport.masteredCards} выученных карточках")
 
         println("========== ML-ПОДХОД ==========")
         println("Выучено: ${mlReport.masteredCards}/${mlReport.totalCards}")
@@ -494,18 +494,18 @@ class MLIntegrationTest {
         val mlSecondHalf = mlAllAccuracy.drop(secondHalfStart).filter { it > 0 }.average()
         val sm2SecondHalf = sm2AllAccuracy.drop(secondHalfStart).filter { it > 0 }.average()
 
-        println("\n📈 ВТОРАЯ ПОЛОВИНА (дни ${secondHalfStart+1}-60):")
+        println("\nВТОРАЯ ПОЛОВИНА (дни ${secondHalfStart+1}-60):")
         println("   ML средняя: ${"%.1f".format(mlSecondHalf)}%")
         println("   SM-2 средняя: ${"%.1f".format(sm2SecondHalf)}%")
 
-        println("\n🔍 ПРОВЕРКА, ЧТО МОДЕЛЬ РАБОТАЕТ:")
+        println("\nПРОВЕРКА, ЧТО МОДЕЛЬ РАБОТАЕТ:")
         println("   ML предсказаний: ${mlReport.mlPredictions}")
         println("   ML ошибок: ${mlReport.mlErrors}")
         println("   ML успешных предсказаний (mlCorrectPredictions): ${mlReport.mlCorrectPredictions}")
         println("   ML точность предсказаний: ${mlReport.mlAccuracy}%")
 
         if (mlReport.mlPredictions == 0) {
-            println("   ⚠️ ML НЕ ИСПОЛЬЗОВАЛАСЬ! Возможные причины:")
+            println("   ML НЕ ИСПОЛЬЗОВАЛАСЬ! Возможные причины:")
             println("      1. Модель не загружена (tensorFlowModel.isModelReady = false)")
             println("      2. Все предсказания ушли в fallback из-за низкой уверенности")
         }
@@ -513,13 +513,12 @@ class MLIntegrationTest {
 
     private fun printComparisonMetric(name: String, mlValue: String, sm2Value: String) {
         println("\n📌 $name:")
-        println("   🤖 ML:  $mlValue")
-        println("   📚 SM-2: $sm2Value")
+        println("    ML:  $mlValue")
+        println("    SM-2: $sm2Value")
     }
     private fun saveResults(report: SimulationReport, suffix: String) {
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
 
-        // 🔥 Сохраняем на внешнее хранилище (доступно через Device Explorer)
         val dir = File(context.getExternalFilesDir(null), "simulation_reports")
         dir.mkdirs()
 
@@ -529,7 +528,7 @@ class MLIntegrationTest {
         val reportFile = File(dir, "report_${suffix}_$timestamp.txt")
         reportFile.writeText(report.getFullReport())
 
-        println("\n💾 Результаты сохранены:")
+        println("\n Результаты сохранены:")
         println("   CSV: ${csvFile.absolutePath}")
         println("   TXT: ${reportFile.absolutePath}")
     }

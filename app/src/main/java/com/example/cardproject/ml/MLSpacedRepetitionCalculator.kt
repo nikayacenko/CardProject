@@ -79,7 +79,7 @@ class MLSpacedRepetitionCalculator @Inject constructor(
         val now = System.currentTimeMillis()
         // Используем coerceAtLeast, чтобы интервал никогда не был нулевым
         val safeInterval = nextInterval.coerceAtLeast(BASE_INTERVALS[learningMode] ?: 0.042)
-        val intervalMs = (safeInterval * 24 * 60 * 60 * 1000L).toLong() // Добавлен L для Long
+        val intervalMs = (safeInterval * 24 * 60 * 60 * 1000L).toLong()
 
         return card.copy(
             lastReviewed = now,
@@ -163,14 +163,13 @@ class MLSpacedRepetitionCalculator @Inject constructor(
         val baseInterval = BASE_INTERVALS[learningMode] ?: 1.0
         val maxInterval = MAX_INTERVALS[learningMode] ?: 365.0
 
-        // 1. Если модель не уверена, используем РОСТ по SM-2 (чтобы не стоять на месте)
+        // 1. Если модель не уверена, используем SM-2 (чтобы не стоять на месте)
         if (prediction.needsMoreData || prediction.confidence < 0.4f) {
             return calculateFallbackInterval(card, learningMode)
         }
 
         val currentInterval = maxOf(card.interval, baseInterval)
 
-        // 2. АГРЕССИВНЫЙ МНОЖИТЕЛЬ ML
         // Поднимаем диапазон: от 1.8 (для сложных) до 3.5 (для легких)
         // Именно это позволит перегнать Fallback (у которого обычно 1.5-2.0)
         var mlMultiplier = (prediction.optimalIntervalDays.toDouble() * 1.2).coerceIn(1.8, 3.5)
@@ -464,7 +463,6 @@ class MLSpacedRepetitionCalculator @Inject constructor(
 
         val currentInterval = maxOf(card.interval, baseInterval)
 
-        // 2. АГРЕССИВНЫЙ МНОЖИТЕЛЬ ML
         // Поднимаем диапазон: от 1.8 (для сложных) до 3.5 (для легких)
         // Именно это позволит перегнать Fallback (у которого обычно 1.5-2.0)
         var mlMultiplier = (prediction.optimalIntervalDays.toDouble() * 1.2).coerceIn(1.8, 3.5)
