@@ -51,7 +51,10 @@ data class Card(
     //управление алгоритмом
     val algorithmType: String = "ML", // Для сравнения в курсовой (SM2 vs ML)
     val masteryLevel: Float = 0f,
-    var lastPredictedProbability: Float = 0f // Уверенность ИИ в вашем ответе
+    var lastPredictedProbability: Float = 0f, // Уверенность ИИ в вашем ответе
+
+    val imagePath: String? = null,      // путь к картинке
+    val hasImage: Boolean = false     // флаг для быстрой проверки
 ){
     fun calculateMetadata(): Card {
         val fullText = "$front $back"

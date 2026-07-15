@@ -57,23 +57,8 @@ class NoteRepository @Inject constructor(
         return NoteWithTags(note, tags)
     }
 
-    fun searchNotesWithTags(query: String): Flow<List<NoteWithTags>> {
-        return noteDao.searchNotes(query).combine(tagDao.getAllTagsFlow()) { notes, allTags ->
-            notes.map { note ->
-                val tagsForNote = allTags
-                    .filter { it.noteId == note.id }
-                    .map { it.name }
-                NoteWithTags(note, tagsForNote)
-            }
-        }
-    }
-
     suspend fun getAllNoteTagNames(): List<String> {
         return tagDao.getAllNoteTagNames()
     }
 
-    // Метод для получения всех тегов (и колод и конспектов)
-    suspend fun getAllTagNames(): List<String> {
-        return tagDao.getAllTagNames()
-    }
 }

@@ -752,13 +752,13 @@ class DeckListFragment : Fragment() {
 
         // ОБНОВЛЕНО: Научно обоснованные названия
         val fundamentalRadio = RadioButton(requireContext()).apply {
-            text = "📚 Фундаментальное обучение"
+            text = "Фундаментальное обучение"
             id = View.generateViewId()
             isChecked = true // По умолчанию выбран
         }
 
         val eventPrepRadio = RadioButton(requireContext()).apply {
-            text = "🎯 Подготовка к событию"
+            text = "Подготовка к событию"
             id = View.generateViewId()
         }
 
@@ -767,7 +767,7 @@ class DeckListFragment : Fragment() {
 
         // ОБНОВЛЕНО: Динамическое пояснение
         val modeExplanation = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
-            text = "📚 Оптимально для экзаменов и долгосрочного запоминания (80-90% эффективности)"
+            text = "Оптимально для экзаменов и долгосрочного запоминания (80-90% эффективности)"
             setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Caption)
             setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_500))
             setPadding(0, 8, 0, 0)
@@ -776,13 +776,13 @@ class DeckListFragment : Fragment() {
         // ОБНОВЛЕНО: Обработчики выбора радиокнопок
         fundamentalRadio.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                modeExplanation.text = "📚 Оптимально для экзаменов и долгосрочного запоминания (80-90% эффективности)"
+                modeExplanation.text = "Оптимально для экзаменов и долгосрочного запоминания (80-90% эффективности)"
             }
         }
 
         eventPrepRadio.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                modeExplanation.text = "🎯 Для срочной подготовки к зачетам и мероприятиям (40-60% эффективности)"
+                modeExplanation.text = "Для срочной подготовки к зачетам и мероприятиям (40-60% эффективности)"
             }
         }
 

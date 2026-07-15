@@ -34,7 +34,4 @@ interface CardDao {
 
     @Query("DELETE FROM cards")
     suspend fun deleteAllCards()
-
-
-
 }

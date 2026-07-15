@@ -94,12 +94,24 @@ class SessionStatsFragment : Fragment() {
     }
 
     private fun navigateBackToCardList() {
-        val fragmentManager = requireActivity().supportFragmentManager
+        val stats = sessionStats ?: return
 
-        // Простая логика: если открыто из обучения, просто делаем два pop back stack
-        // чтобы вернуться из: session_stats -> learning -> card_list
-        fragmentManager.popBackStack() // Выходим из session_stats
-        fragmentManager.popBackStack() // Выходим из learning (возвращаемся к card_list)
+        // Создаём CardListFragment с параметрами
+        val cardListFragment = CardListFragment().apply {
+            arguments = Bundle().apply {
+                putLong("deckId", stats.deckId)
+                putString("deckName", stats.deckName)
+            }
+        }
+
+        // Очищаем весь back stack
+        requireActivity().supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+
+        // Заменяем на CardListFragment
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, cardListFragment)
+            .addToBackStack(null)
+            .commit()
     }
 
 

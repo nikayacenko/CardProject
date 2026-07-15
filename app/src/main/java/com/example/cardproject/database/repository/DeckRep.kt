@@ -120,24 +120,5 @@ class DeckRepository @Inject constructor(
         return tagDao.getTagsByDeckId(deckId).map { it.name }
     }
 
-    suspend fun getAllTagNames(): List<String> {
-        return tagDao.getAllTagNames()
-    }
-
-//    suspend fun searchDecksByTag(tagName: String): List<DeckWithTags> {
-//        val deckIds = tagDao.getDeckIdsByTag(tagName)
-//        val decks = deckIds.mapNotNull { deckId -> deckDao.getDeckById(deckId) }
-//        return decks.map { deck ->
-//            val tags = getTagsByDeckId(deck.id)
-//            DeckWithTags(deck, tags)
-//        }
-//    }
-
-    // Вспомогательная функция для комбинирования Flow
-    suspend fun getDeckWithTagsById(deckId: Long): DeckWithTags? {
-        val deck = deckDao.getDeckById(deckId) ?: return null
-        val tags = getTagsByDeckId(deckId)
-        return DeckWithTags(deck, tags)
-    }
 
 }

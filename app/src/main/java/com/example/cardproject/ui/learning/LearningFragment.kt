@@ -25,7 +25,8 @@ class LearningFragment : Fragment() {
     private var _binding: FragmentLearningBinding? = null
     private val binding get() = _binding!!
     private val viewModel: LearningViewModel by viewModels()
-
+    private var isCurrentAnswerLong = false
+    private var isAnimating = false
     private var cardShowTime: Long = 0
     private var isFrontVisible = true
 
@@ -51,19 +52,13 @@ class LearningFragment : Fragment() {
 
         setupObservers()
         setupClickListeners()
-        // Проверка статуса ML
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            viewModel.isMLReady.collect { isReady ->
-//                if (isReady) {
-//                    binding.mlStatusBadge.visibility = View.VISIBLE
-//                    binding.mlStatusBadge.text = "AI"
-//                } else {
-//                    binding.mlStatusBadge.visibility = View.GONE
-//                }
-//            }
-//        }
+        setupCardPerspective()
     }
-
+    private fun setupCardPerspective() {
+        binding.cardContainer.cameraDistance = 10000 * resources.displayMetrics.density
+        binding.cardFrontLayout.cameraDistance = 10000 * resources.displayMetrics.density
+        binding.cardBackLayout.cameraDistance = 10000 * resources.displayMetrics.density
+    }
     private fun handleExitAttempt() {
         if (viewModel.getAnsweredCount() > 0) {
             MaterialAlertDialogBuilder(requireContext())
@@ -161,6 +156,33 @@ class LearningFragment : Fragment() {
     private fun showCard(card: Card) {
         binding.cardFrontText.text = card.front
         binding.cardBackText.text = card.back
+        resetCardState()
+
+        isCurrentAnswerLong = card.back.length > 500
+
+        // Сбрасываем состояние
+        binding.cardBackText.movementMethod = null
+        binding.btnShowFull.visibility = View.GONE
+        binding.btnShowFull.setOnClickListener(null)
+
+        if (isCurrentAnswerLong) {
+            // Обрезаем текст
+            val truncatedText = if (card.back.length > 500) {
+                card.back.substring(0, 500) + "..."
+            } else {
+                card.back
+            }
+            binding.cardBackText.text = truncatedText
+
+            // Показываем кнопку
+            binding.btnShowFull.visibility = View.VISIBLE
+            binding.btnShowFull.setOnClickListener {
+                showFullAnswerDialog()
+            }
+        } else {
+            binding.cardBackText.text = card.back
+            binding.btnShowFull.visibility = View.GONE
+        }
         binding.cardBackLayout.visibility = View.GONE
         binding.cardFrontLayout.visibility = View.VISIBLE
         binding.answerButtons.visibility = View.GONE
@@ -169,18 +191,126 @@ class LearningFragment : Fragment() {
         binding.cardCounter.text = "Карта: ${viewModel.getAnsweredCount() + 1}/${viewModel.getTotalCount()}"
     }
 
+    private fun resetCardState() {
+        binding.cardFrontLayout.clearAnimation()
+        binding.cardBackLayout.clearAnimation()
+
+        binding.cardFrontLayout.visibility = View.VISIBLE
+        binding.cardFrontLayout.rotationY = 0f
+
+        binding.cardBackLayout.visibility = View.GONE
+        binding.cardBackLayout.rotationY = 180f
+
+        binding.answerButtons.visibility = View.GONE
+        binding.btnShowFull.visibility = View.GONE
+        binding.btnShowFull.setOnClickListener(null)
+
+        isFrontVisible = true
+        isAnimating = false
+    }
+    private fun showFullAnswerDialog() {
+        val card = viewModel.currentCard.value ?: return
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Полный ответ")
+            .setMessage(card.back)
+            .setPositiveButton("Закрыть", null)
+            .create()
+
+        dialog.show()
+
+        // Делаем текст прокручиваемым (как в FullScreenCardFragment)
+        val messageTextView = dialog.findViewById<android.widget.TextView>(android.R.id.message)
+        messageTextView?.let { textView ->
+            textView.movementMethod = android.text.method.ScrollingMovementMethod()
+            textView.setPadding(50, 30, 50, 30)
+        }
+
+        // Настраиваем размер (как в FullScreenCardFragment)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9).toInt(),
+            (resources.displayMetrics.heightPixels * 0.7).toInt()
+        )
+    }
     private fun setupClickListeners() {
         binding.cardContainer.setOnClickListener {
-            if (isFrontVisible) {
-                isFrontVisible = false
-                binding.cardFrontLayout.visibility = View.GONE
-                binding.cardBackLayout.visibility = View.VISIBLE
-                binding.answerButtons.visibility = View.VISIBLE
+            if (!isAnimating) {
+                flipCard()
             }
         }
 
+        // 2. Кнопка "показать полностью"
+        binding.btnShowFull.setOnClickListener {
+            showFullAnswerDialog()
+        }
+
+        // 3. Кнопки ответа
         binding.knowButton.setOnClickListener { submitAnswer(1) }
         binding.dontKnowButton.setOnClickListener { submitAnswer(0) }
+    }
+
+    private fun flipCard() {
+        if (isAnimating) return
+        isAnimating = true
+
+        if (isFrontVisible) {
+            flipToBack()
+        } else {
+            flipToFront()
+        }
+    }
+    private fun flipToBack() {
+        binding.cardFrontLayout.animate()
+            .rotationY(90f)
+            .setDuration(200)
+            .withEndAction {
+                binding.cardFrontLayout.visibility = View.GONE
+                binding.cardBackLayout.visibility = View.VISIBLE
+                binding.cardBackLayout.rotationY = -90f
+
+                binding.cardBackLayout.animate()
+                    .rotationY(0f)
+                    .setDuration(200)
+                    .withEndAction {
+                        isFrontVisible = false
+                        isAnimating = false
+                        binding.answerButtons.visibility = View.VISIBLE
+
+                        // Показываем кнопку "показать полностью" если ответ длинный
+                        val card = viewModel.currentCard.value
+                        if (card != null && card.back.length > 500) {
+                            binding.btnShowFull.visibility = View.VISIBLE
+                        }
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    /**
+     * Переворот на переднюю сторону (вопрос)
+     */
+    private fun flipToFront() {
+        binding.cardBackLayout.animate()
+            .rotationY(90f)
+            .setDuration(200)
+            .withEndAction {
+                binding.cardBackLayout.visibility = View.GONE
+                binding.cardFrontLayout.visibility = View.VISIBLE
+                binding.cardFrontLayout.rotationY = -90f
+
+                binding.cardFrontLayout.animate()
+                    .rotationY(0f)
+                    .setDuration(200)
+                    .withEndAction {
+                        isFrontVisible = true
+                        isAnimating = false
+                        binding.answerButtons.visibility = View.GONE
+                        binding.btnShowFull.visibility = View.GONE
+                    }
+                    .start()
+            }
+            .start()
     }
 
     private fun submitAnswer(quality: Int) {

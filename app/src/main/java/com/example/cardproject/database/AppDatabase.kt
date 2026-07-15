@@ -27,7 +27,7 @@ import com.example.cardproject.model.ReviewLog
         Note::class,
         ReviewLog::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -54,7 +54,6 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)
-                            // ВКЛЮЧАЕМ ПОДДЕРЖКУ ВНЕШНИХ КЛЮЧЕЙ ДЛЯ КАСКАДНОГО УДАЛЕНИЯ
                             db.execSQL("PRAGMA foreign_keys = ON;")
                         }
                     })

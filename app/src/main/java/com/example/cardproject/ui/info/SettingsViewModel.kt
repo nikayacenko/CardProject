@@ -31,6 +31,9 @@ class SettingsViewModel @Inject constructor(
     private val _newCardsPerDay = MutableStateFlow(10)
     val newCardsPerDay: StateFlow<Int> = _newCardsPerDay.asStateFlow()
 
+    private val _minCardsForSession = MutableStateFlow(10)
+    val minCardsForSession: StateFlow<Int> = _minCardsForSession.asStateFlow()
+
     init {
         loadData()
         loadPreferences()
