@@ -202,7 +202,80 @@
 
             <!--                </LinearLayout>-->
             <!--            </com.google.android.material.card.MaterialCardView>-->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="⚙️ Настройки сессии"
+                        android:textColor="#9371FA"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Минимальное количество карточек для сессии -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Минимум карточек для старта сессии:"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:id="@+id/minCardsValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="10"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#9371FA" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="карточек"
+                            android:textSize="16sp"
+                            android:textColor="#666666" />
+
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/minCardsSeekBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="30"
+                        android:progress="10"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Значение от 1 до 30"
+                        android:textSize="12sp"
+                        android:textColor="#999999" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <!-- СЕКЦИЯ: ИНФОРМАЦИЯ О ПРИЛОЖЕНИИ -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

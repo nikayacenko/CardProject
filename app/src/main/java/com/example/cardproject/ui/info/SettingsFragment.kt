@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -76,6 +77,13 @@ class SettingsFragment : Fragment() {
 //                }
 //            }
 //        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.minCardsForSession.collect { value ->
+                binding.minCardsSeekBar.progress = value
+                binding.minCardsValue.text = value.toString()
+            }
+        }
     }
 
     private fun updateAIStatus(isReady: Boolean) {
@@ -116,6 +124,21 @@ class SettingsFragment : Fragment() {
 //                saveNewCardsPerDay()
 //            }
 //        }
+
+        binding.minCardsSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.minCardsValue.text = progress.toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val value = seekBar?.progress ?: 10
+                viewModel.setMinCardsForSession(value)
+                println("🔍 Сохранено в настройках: minCards=$value")
+                Toast.makeText(requireContext(), "Минимум: $value карточек", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
 //    private fun saveNewCardsPerDay() {

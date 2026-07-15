@@ -1,12 +1,18 @@
 package com.example.cardproject.ui.info
 
 
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.ml.TensorFlowLiteModel
 import com.example.cardproject.model.LearningMode
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val reviewLogRepository: ReviewLogRepository,
-    private val tfliteModel: TensorFlowLiteModel
+    private val tfliteModel: TensorFlowLiteModel,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _isMLReady = MutableStateFlow(false)
@@ -34,6 +41,8 @@ class SettingsViewModel @Inject constructor(
     private val _minCardsForSession = MutableStateFlow(10)
     val minCardsForSession: StateFlow<Int> = _minCardsForSession.asStateFlow()
 
+    private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+
     init {
         loadData()
         loadPreferences()
@@ -48,11 +57,17 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadPreferences() {
         viewModelScope.launch {
-            // Здесь можно загружать из SharedPreferences
-            // Пока оставляем значения по умолчанию
+            _minCardsForSession.value = prefs.getInt("min_cards_for_session", 10)
         }
     }
-
+    fun setMinCardsForSession(count: Int) {
+        if (count in 1..30) {
+            _minCardsForSession.value = count
+            viewModelScope.launch {
+                prefs.edit().putInt("min_cards_for_session", count).apply()
+            }
+        }
+    }
     fun setDefaultLearningMode(mode: LearningMode) {
         _defaultLearningMode.value = mode
         // Сохранить в SharedPreferences

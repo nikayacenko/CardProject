@@ -31,6 +31,8 @@ class CardListViewModel(application: Application) : AndroidViewModel(application
     private val _learningMode = MutableStateFlow<LearningMode?>(null)
     val learningMode = _learningMode.asStateFlow()
 
+
+
     init {
         val cardDao = AppDatabase.getInstance(application).cardDao()
         val deckDao = AppDatabase.getInstance(application).deckDao()

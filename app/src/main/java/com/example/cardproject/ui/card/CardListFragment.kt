@@ -1,6 +1,7 @@
 package com.example.cardproject.ui.card
 
 import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cardproject.R
 import com.example.cardproject.databinding.FragmentCardListBinding
 import com.example.cardproject.model.Card
+import com.example.cardproject.ui.info.SettingsFragment
 import com.example.cardproject.ui.learning.LearningFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,6 +34,7 @@ class CardListFragment : Fragment() {
     private val viewModel: CardListViewModel by viewModels()
     private lateinit var adapter: CardAdapter
 
+    private var currentCards: List<Card> = emptyList()
     private var deckId: Long = -1
     private var deckName: String = ""
     private var cardCount: Int = 0
@@ -95,10 +98,15 @@ class CardListFragment : Fragment() {
                     true
                 }
                 R.id.menu_learn -> {
-                    if (cardCount >= 10) {
+                    val minCards = getMinCardsForSession()
+                    val readyCards = getReadyCardsCount()
+                    println("🔍 menu_learn: minCards=$minCards, readyCards=$readyCards")
+                    if (readyCards >= minCards && readyCards > 0) {
                         startLearning()
+                    } else if (readyCards == 0) {
+                        Toast.makeText(requireContext(), "Нет карточек для повторения", Toast.LENGTH_SHORT).show()
                     } else {
-                        showNotEnoughCardsMessage()
+                        showNotEnoughCardsMessage(readyCards, minCards)
                     }
                     true
                 }
@@ -107,6 +115,19 @@ class CardListFragment : Fragment() {
         }
     }
 
+    // Метод для подсчёта готовых карточек
+    private fun getReadyCardsCount(): Int {
+        val now = System.currentTimeMillis()
+        return currentCards.count { card ->  // ← используем currentCards
+            card.nextReview == null || card.nextReview!! <= now
+        }
+    }
+    private fun getMinCardsForSession(): Int {
+        val prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val value = prefs.getInt("min_cards_for_session", 10)
+        println("🔍 getMinCardsForSession = $value")
+        return value
+    }
     private fun showSelectionMode(selectedCount: Int) {
         binding.toolbar.menu.clear()
         binding.toolbar.title = "Выбрано: $selectedCount"
@@ -253,6 +274,18 @@ class CardListFragment : Fragment() {
     }
 
     private fun startLearning() {
+        val minCards = getMinCardsForSession()
+        val readyCards = getReadyCardsCount()
+
+        if (readyCards == 0) {
+            Toast.makeText(requireContext(), "Нет карточек для повторения", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (readyCards < minCards) {
+            showNotEnoughCardsMessage(readyCards, minCards)
+            return
+        }
         val learningFragment = LearningFragment().apply {
             arguments = Bundle().apply {
                 putLong("deckId", deckId)
@@ -265,7 +298,31 @@ class CardListFragment : Fragment() {
             .addToBackStack("card_list")
             .commit()
     }
-
+    private fun showNotEnoughCardsMessage(ready: Int, required: Int) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Недостаточно готовых карточек")
+            .setMessage("""
+            Готово к повторению: $ready
+            Требуется в настройках: $required
+            
+            Вы можете:
+            • Создать новые карточки
+            • Уменьшить порог в настройках
+            • Использовать полноэкранный режим для просмотра всех карточек
+        """.trimIndent())
+            .setPositiveButton("Полноэкранный режим") { _, _ ->
+                openFullScreenMode()
+            }
+            .setNegativeButton("Настройки") { _, _ ->
+                val settingsFragment = SettingsFragment()
+                requireActivity().supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, settingsFragment)
+                    .addToBackStack("settings")
+                    .commit()
+            }
+            .setNeutralButton("Отмена", null)
+            .show()
+    }
     private fun setupRecyclerView() {
         adapter = CardAdapter(
             onCardClick = { card ->
@@ -291,6 +348,7 @@ class CardListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.cards.collectLatest { cards ->
                 println("🎴 Получены карточки: ${cards.size} шт.")
+                currentCards = cards  // ← 🔥 ВАЖНО: сохраняем карточки
                 cardCount = cards.size
                 adapter.submitList(cards)
                 updateMenuVisibility()
@@ -307,10 +365,21 @@ class CardListFragment : Fragment() {
 
     private fun updateMenuVisibility() {
         val learnMenuItem = binding.toolbar.menu.findItem(R.id.menu_learn)
-        learnMenuItem?.isVisible = cardCount >= 10
+        val minCards = getMinCardsForSession()
 
-        if (cardCount < 10) {
-            learnMenuItem?.title = "Обучение (нужно ${10 - cardCount} карточек)"
+        // 🔥 Считаем готовые карточки прямо из currentCards, а не из adapter
+        val now = System.currentTimeMillis()
+        val readyCards = currentCards.count { card ->
+            card.nextReview == null || card.nextReview!! <= now
+        }
+
+        // Показываем пункт меню, если есть хотя бы 1 готовая карточка
+        learnMenuItem?.isVisible = readyCards > 0
+
+        if (readyCards == 0) {
+            learnMenuItem?.title = "Нет готовых карточек"
+        } else if (readyCards < minCards) {
+            learnMenuItem?.title = "Готово $readyCards/$minCards карточек"
         } else {
             learnMenuItem?.title = "Интервальное повторение"
         }
