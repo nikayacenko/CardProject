@@ -41,6 +41,22 @@ class ReviewLogRepository @Inject constructor(
     suspend fun getLogsForTraining(limit: Int = 1000): List<ReviewLog> =
         reviewLogDao.getLogsForTraining(limit)
 
+    suspend fun getUnsyncedLogs(limit: Int = 100): List<ReviewLog> {
+        return reviewLogDao.getUnsyncedLogs(limit)
+    }
 
+    /**
+     * Отметить логи как отправленные
+     */
+    suspend fun markLogsSynced(logs: List<ReviewLog>) {
+        reviewLogDao.markLogsSynced(logs.map { it.id })
+    }
+
+    /**
+     * Получить количество неотправленных логов
+     */
+    suspend fun getUnsyncedCount(): Int {
+        return reviewLogDao.getUnsyncedCount()
+    }
 
 }

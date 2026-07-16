@@ -11,7 +11,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#CBC2B8F6"
+        android:background="?attr/colorPrimarySurface"
         app:title="Настройки"
         app:titleTextColor="@android:color/white"
         app:navigationIcon="@drawable/ic_arrow_back"
@@ -39,6 +39,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
                     android:orientation="vertical"
                     android:padding="16dp">
 
@@ -212,6 +213,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
                     android:orientation="vertical"
                     android:padding="16dp">
 
@@ -219,7 +221,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="⚙️ Настройки сессии"
+                        android:text="Настройки сессии"
                         android:textColor="#9371FA"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -235,26 +237,26 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/minCardsValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="10"
+                            android:textColor="#9371FA"
                             android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:textColor="#9371FA" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
                             android:text="карточек"
-                            android:textSize="16sp"
-                            android:textColor="#666666" />
+                            android:textColor="#666666"
+                            android:textSize="16sp" />
 
                     </LinearLayout>
 
@@ -262,21 +264,245 @@
                         android:id="@+id/minCardsSeekBar"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:max="30"
-                        android:progress="10"
-                        android:layout_marginTop="4dp" />
+                        android:progress="10" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Значение от 1 до 30"
-                        android:textSize="12sp"
-                        android:textColor="#999999" />
+                        android:textColor="#999999"
+                        android:textSize="12sp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-            <!-- СЕКЦИЯ: ИНФОРМАЦИЯ О ПРИЛОЖЕНИИ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/fineTuneCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Дообучение AI модели"
+                            android:textColor="#9371FA"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <!-- Статус (зелёный/красный кружок) -->
+                        <View
+                            android:id="@+id/fineTuneStatusDot"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/circle_green" />
+
+                    </LinearLayout>
+
+                    <!-- Статус дообучения -->
+                    <TextView
+                        android:id="@+id/fineTuneStatusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Готово к дообучению"
+                        android:textColor="@color/gray_600"
+                        android:textSize="14sp" />
+
+                    <!-- Количество логов -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Логов на сервере:"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/serverLogsCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#9371FA"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Прогресс дообучения -->
+                    <LinearLayout
+                        android:id="@+id/fineTuneProgressLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/fineTuneProgressText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Дообучение: 0%"
+                            android:textColor="#9371FA"
+                            android:textSize="14sp" />
+
+                        <ProgressBar
+                            android:id="@+id/fineTuneProgressBar"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="4dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressTint="#9371FA" />
+
+                    </LinearLayout>
+
+                    <!-- Кнопка дообучения -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fineTuneButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Запустить дообучение"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="8dp" />
+
+                    <!-- Проверка обновлений -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/checkUpdatesButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Проверить обновления модели"
+                        android:textColor="#9371FA"
+                        app:cornerRadius="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Требуется интернет-соединение. Дообучение занимает 1-3 минуты."
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="Цветовая схема"
+                        android:textColor="#9371FA"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <!-- Фиолетовый -->
+                        <View
+                            android:id="@+id/colorPurple"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/circle_purple"
+                            android:backgroundTint="#AE99FA"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <!-- Синий -->
+                        <View
+                            android:id="@+id/colorBlue"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/circle_blue"
+                            android:backgroundTint="#A6BFF6"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <!-- Зелёный -->
+                        <View
+                            android:id="@+id/colorGreen"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/circle_green"
+                            android:backgroundTint="#9CEBC4"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <!-- Оранжевый -->
+                        <View
+                            android:id="@+id/colorOrange"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/circle_orange"
+                            android:backgroundTint="#FB6334"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <!-- Розовый -->
+                        <View
+                            android:id="@+id/colorPink"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/circle_pink"
+                            android:backgroundTint="#FF6A83"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -286,6 +512,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
                     android:orientation="vertical"
                     android:padding="16dp">
 

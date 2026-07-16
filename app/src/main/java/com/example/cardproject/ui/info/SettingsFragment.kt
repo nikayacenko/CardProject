@@ -1,6 +1,7 @@
 package com.example.cardproject.ui.info
 
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -47,6 +48,7 @@ class SettingsFragment : Fragment() {
         setupToolbar()
         setupObservers()
         setupClickListeners()
+        setupColorPicker()
 //        loadPreferences()
     }
 
@@ -84,6 +86,52 @@ class SettingsFragment : Fragment() {
                 binding.minCardsValue.text = value.toString()
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isFineTuning.collect { isRunning ->
+                binding.fineTuneButton.isEnabled = !isRunning
+                binding.fineTuneButton.text = if (isRunning) {
+                    "Идёт дообучение..."
+                } else {
+                    "Запустить дообучение"
+                }
+                updateStatusDot(isRunning)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.fineTuneStatus.collect { status ->
+                binding.fineTuneStatusText.text = status
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.fineTuneProgress.collect { progress ->
+                val progressPercent = (progress * 100).toInt()
+                binding.fineTuneProgressBar.progress = progressPercent
+                binding.fineTuneProgressText.text = "Дообучение: $progressPercent%"
+
+                if (progress > 0f && progress < 1f) {
+                    binding.fineTuneProgressLayout.visibility = View.VISIBLE
+                } else if (progress >= 1f) {
+                    // Завершено — скрываем через 2 секунды
+                    // (можно оставить видимым для информации)
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.serverLogsCount.collect { count ->
+                binding.serverLogsCountText.text = count.toString()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.hasNewModel.collect { hasNew ->
+                if (hasNew) {
+                    binding.fineTuneStatusText.text = "✅ Доступна новая модель!"
+                }
+            }
+        }
     }
 
     private fun updateAIStatus(isReady: Boolean) {
@@ -95,6 +143,17 @@ class SettingsFragment : Fragment() {
             binding.aiStatusText.text = "Не активна (SM-2)"
             binding.aiStatusText.setTextColor(ContextCompat.getColor(requireContext(), R.color.red_500))
 //            binding.modelInfoText.text = "Используется базовый алгоритм SM-2"
+        }
+    }
+    /**
+     * Обновление статусного кружка
+     */
+    private fun updateStatusDot(isRunning: Boolean) {
+        val dot = binding.fineTuneStatusDot
+        if (isRunning) {
+            dot.setBackgroundResource(R.drawable.circle_orange)
+        } else {
+            dot.setBackgroundResource(R.drawable.circle_green)
         }
     }
 
@@ -139,8 +198,55 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Минимум: $value карточек", Toast.LENGTH_SHORT).show()
             }
         })
-    }
 
+        // Кнопка "Запустить дообучение"
+        binding.fineTuneButton.setOnClickListener {
+            if (viewModel.fineTuneStatus.value.contains("Сервер недоступен")) {
+                showServerUnavailableDialog()
+                return@setOnClickListener
+            }
+
+            // Показываем диалог подтверждения
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Дообучение AI модели")
+                .setMessage("""
+                    Будет выполнено:
+                    
+                    1. Отправка логов на сервер
+                    2. Дообучение модели (1-3 минуты)
+                    3. Скачивание и установка новой модели
+                    
+                    Требуется интернет-соединение.
+                """.trimIndent())
+                .setPositiveButton("Начать") { _, _ ->
+                    viewModel.startFineTune()
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
+        }
+
+        // Кнопка "Проверить обновления"
+        binding.checkUpdatesButton.setOnClickListener {
+            viewModel.refreshServerData()
+        }
+    }
+    private fun showServerUnavailableDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Сервер недоступен")
+            .setMessage("""
+                Не удаётся подключиться к серверу дообучения.
+                
+                Проверьте:
+                1. Интернет-соединение на устройстве
+                2. Запущен ли сервер (локально или на Render)
+                3. Правильно ли указан URL в RetrofitClient
+            """.trimIndent())
+            .setPositiveButton("Повторить") { _, _ ->
+                viewModel.refreshServerData()
+            }
+            .setNegativeButton("OK", null)
+            .show()
+    }
 //    private fun saveNewCardsPerDay() {
 //        val text = binding.newCardsPerDayInput.text.toString()
 //        val value = text.toIntOrNull()
@@ -219,5 +325,50 @@ class SettingsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    // В SettingsFragment
+    private fun setupColorPicker() {
+        val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val currentColor = prefs.getString("theme_color", "purple")
+
+        // Подсвечиваем выбранный цвет
+        highlightSelectedColor(currentColor)
+
+        // Обработчики кликов
+        binding.colorPurple.setOnClickListener { setThemeColor("purple") }
+        binding.colorBlue.setOnClickListener { setThemeColor("blue") }
+        binding.colorGreen.setOnClickListener { setThemeColor("green") }
+        binding.colorOrange.setOnClickListener { setThemeColor("orange") }
+        binding.colorPink.setOnClickListener { setThemeColor("pink") }
+    }
+
+    private fun setThemeColor(color: String) {
+        val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        prefs.edit().putString("theme_color", color).apply()
+        highlightSelectedColor(color)
+
+        // Применяем тему
+        applyTheme()
+    }
+
+    private fun highlightSelectedColor(color: String?) {
+        val views = listOf(
+            binding.colorPurple to "purple",
+            binding.colorBlue to "blue",
+            binding.colorGreen to "green",
+            binding.colorOrange to "orange",
+            binding.colorPink to "pink"
+        )
+
+        views.forEach { (view, id) ->
+            view.setBackgroundResource(
+                if (id == color) R.drawable.circle_selected else R.drawable.circle_green
+            )
+        }
+    }
+
+    private fun applyTheme() {
+        requireActivity().recreate()
     }
 }

@@ -8,13 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.example.cardproject.R
 
 class LearningStatusTooltip(context: Context) : PopupWindow(context) {
 
+    private val tooltipView: View
+    private val tooltipText: TextView
     init {
-        val view = LayoutInflater.from(context).inflate(R.layout.tooltip_learning_status, null)
-        contentView = view
+        tooltipView = LayoutInflater.from(context).inflate(R.layout.tooltip_learning_status, null)
+        tooltipText = tooltipView.findViewById(R.id.tooltipText)
+        applyThemeColors(context)
+        contentView = tooltipView
 
         // ВАЖНО: установите эти флаги
         isOutsideTouchable = true
@@ -31,12 +36,34 @@ class LearningStatusTooltip(context: Context) : PopupWindow(context) {
             false
         }
     }
+    /**
+     * Применение цветов из текущей темы
+     */
+    private fun applyThemeColors(context: Context) {
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val themeColor = prefs.getString("theme_color", "purple") ?: "purple"
+
+        // Выбираем drawable для фона в зависимости от темы
+        val drawableRes = when (themeColor) {
+            "blue" -> R.drawable.bg_tooltip_blue
+            "green" -> R.drawable.bg_tooltip_green
+            "orange" -> R.drawable.bg_tooltip_orange
+            "pink" -> R.drawable.bg_tooltip_pink
+            else -> R.drawable.bg_tooltip
+        }
+
+        tooltipText.setBackgroundResource(drawableRes)
+
+        // Цвет текста — белый для всех тем (хорошо читается на цветном фоне)
+        tooltipText.setTextColor(ContextCompat.getColor(context, R.color.white))
+    }
 
     fun show(target: View, text: String) {
-        val textView = contentView.findViewById<TextView>(R.id.tooltipText)
-        textView.text = text
 
-        contentView.measure(
+        applyThemeColors(target.context)
+        tooltipText.text = text
+
+        tooltipView.measure(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )

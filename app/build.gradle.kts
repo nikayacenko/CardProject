@@ -46,6 +46,12 @@ android {
         jvmTarget = "17"
     }
 
+    android {
+        buildFeatures {
+            buildConfig = true
+        }
+    }
+
     buildFeatures {
         viewBinding = true
         dataBinding = true
@@ -158,6 +164,15 @@ dependencies {
 
     implementation("androidx.gridlayout:gridlayout:1.0.0")
 
+    // Retrofit (HTTP клиент)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // OkHttp (логирование запросов)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Gson (парсинг JSON)
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 kapt {

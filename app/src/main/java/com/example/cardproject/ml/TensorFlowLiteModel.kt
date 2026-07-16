@@ -17,6 +17,9 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.tensorflow.lite.DataType
+import java.io.File
+import java.io.FileInputStream
+import java.nio.channels.FileChannel
 
 @Singleton
 open class TensorFlowLiteModel @Inject constructor(
@@ -201,15 +204,29 @@ open class TensorFlowLiteModel @Inject constructor(
     /**
      * Обновление модели (загрузка новой версии)
      */
-    fun updateModel(newModelFile: MappedByteBuffer) {
+    fun updateModel(file: File) {  // ← принимаем File, а не MappedByteBuffer
         try {
             interpreter?.close()
-            interpreter = Interpreter(newModelFile)
+
+            val buffer = loadModelFile(file.absolutePath)
+            interpreter = Interpreter(buffer)
             _isModelReady.value = true
-            println("Модель обновлена")
+
+            Log.d("TFLite", "✅ Модель обновлена из файла: ${file.name}")
+
         } catch (e: Exception) {
-            println("Ошибка обновления модели: ${e.message}")
+            Log.e("TFLite", "❌ Ошибка обновления модели: ${e.message}")
+            _isModelReady.value = false
         }
+    }
+
+    private fun loadModelFile(path: String): MappedByteBuffer {
+        val file = File(path)
+        val inputStream = FileInputStream(file)
+        val fileChannel = inputStream.channel
+        val buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size())
+        inputStream.close()
+        return buffer
     }
 
     fun close() {

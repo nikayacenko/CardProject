@@ -15,11 +15,23 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val themeColor = prefs.getString("theme_color", "purple")
+
+        when (themeColor) {
+            "purple" -> setTheme(R.style.Theme_CardProject_Purple)
+            "blue" -> setTheme(R.style.Theme_CardProject_Blue)
+            "green" -> setTheme(R.style.Theme_CardProject_Green)
+            "orange" -> setTheme(R.style.Theme_CardProject_Orange)
+            "pink" -> setTheme(R.style.Theme_CardProject_Pink)
+            else -> setTheme(R.style.Theme_CardProject_Purple)
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.your_primary_dark_color)
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.your_primary_color)
+//        window.statusBarColor = ContextCompat.getColor(this, R.color.your_primary_dark_color)
+//        window.navigationBarColor = ContextCompat.getColor(this, R.color.your_primary_color)
         // Простая загрузка только DeckListFragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, DeckListFragment())

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+<!--нижняя и верхняя части-->
     <color name="your_primary_color">#504C36F4</color> <!-- Синий -->
     <color name="your_primary_dark_color">#504C36F4</color> <!-- Темно-синий -->
 
@@ -98,5 +99,25 @@
 
 
     <color name="background_light">#F5F5F5</color>
+
+    <!-- ============================================================ -->
+    <!-- ЦВЕТА ДЛЯ СТАТУС-БАРА И НАВБАРА                              -->
+    <!-- ============================================================ -->
+    <color name="status_bar_purple">#9371FA</color>
+    <color name="nav_bar_purple">#9371FA</color>
+
+    <color name="status_bar_blue">#4A90D9</color>
+    <color name="nav_bar_blue">#4A90D9</color>
+
+    <color name="status_bar_green">#34A853</color>
+    <color name="nav_bar_green">#34A853</color>
+
+    <color name="status_bar_orange">#FF6B35</color>
+    <color name="nav_bar_orange">#FF6B35</color>
+
+    <color name="status_bar_pink">#E94057</color>
+    <color name="nav_bar_pink">#E94057</color>
+
+
 
 </resources>

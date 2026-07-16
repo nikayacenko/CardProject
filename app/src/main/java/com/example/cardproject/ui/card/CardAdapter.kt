@@ -1,5 +1,6 @@
 package com.example.cardproject.ui.card
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -111,6 +112,9 @@ class CardAdapter(
 
             setupLearningStatus(card)
             setupIconTooltip(card)
+
+            val timerBgRes = getTimerBackgroundRes(binding.root.context)
+            binding.timerLayout.setBackgroundResource(timerBgRes)
 
             val isLongText = card.front.length > 200 || card.back.length > 200
             setupExpandButton(isLongText)
@@ -228,7 +232,18 @@ class CardAdapter(
                 }
             }
         }
+        private fun getTimerBackgroundRes(context: Context): Int {
+            val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            val themeColor = prefs.getString("theme_color", "purple") ?: "purple"
 
+            return when (themeColor) {
+                "blue" -> R.drawable.timer_background_blue
+                "green" -> R.drawable.timer_background_green
+                "orange" -> R.drawable.timer_background_orange
+                "pink" -> R.drawable.timer_background_pink
+                else -> R.drawable.timer_background
+            }
+        }
         private fun isCardLearned(card: Card): Boolean {
             return card.reviewStage >= 3 && card.consecutiveCorrect >= 2
         }

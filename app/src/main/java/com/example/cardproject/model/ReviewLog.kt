@@ -56,7 +56,8 @@ data class ReviewLog(
     val linkedCardsMastery: Float,     // Средняя выученность связанных (0-1)
 
     // Результат (для обучения)
-    val wasCorrect: Boolean            // true - вспомнил, false - забыл
+    val wasCorrect: Boolean,            // true - вспомнил, false - забыл
+    val synced: Boolean = false
 ) {
     companion object {
         fun from(

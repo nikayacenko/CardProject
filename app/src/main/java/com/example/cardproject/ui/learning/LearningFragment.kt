@@ -1,5 +1,6 @@
 package com.example.cardproject.ui.learning
 
+import android.content.Context
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -49,10 +50,15 @@ class LearningFragment : Fragment() {
         }
 
         binding.toolbar.setNavigationOnClickListener { handleExitAttempt() }
-
+        updateTooltipBackground()
         setupObservers()
         setupClickListeners()
         setupCardPerspective()
+
+    }
+    override fun onResume() {
+        super.onResume()
+        updateTooltipBackground()
     }
     private fun setupCardPerspective() {
         binding.cardContainer.cameraDistance = 10000 * resources.displayMetrics.density
@@ -338,5 +344,23 @@ class LearningFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    // LearningFragment.kt
+
+    private fun updateTooltipBackground() {
+        val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val themeColor = prefs.getString("theme_color", "purple")
+
+        val drawableRes = when (themeColor) {
+            "blue" -> R.drawable.bg_tooltip_blue
+            "green" -> R.drawable.bg_tooltip_green
+            "orange" -> R.drawable.bg_tooltip_orange
+            "pink" -> R.drawable.bg_tooltip_pink
+            else -> R.drawable.bg_tooltip
+        }
+
+        // Если у вас tooltip в layout
+        binding.mlStatusText.setBackgroundResource(drawableRes)
     }
 }

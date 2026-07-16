@@ -5,8 +5,10 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cardproject.data.sync.SyncManager
 import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.ml.TensorFlowLiteModel
 import com.example.cardproject.model.LearningMode
@@ -23,6 +25,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val reviewLogRepository: ReviewLogRepository,
     private val tfliteModel: TensorFlowLiteModel,
+    private val syncManager: SyncManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -43,9 +46,25 @@ class SettingsViewModel @Inject constructor(
 
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
+    private val _isFineTuning = MutableStateFlow(false)
+    val isFineTuning: StateFlow<Boolean> = _isFineTuning.asStateFlow()
+
+    private val _fineTuneStatus = MutableStateFlow("Готово")
+    val fineTuneStatus: StateFlow<String> = _fineTuneStatus.asStateFlow()
+
+    private val _fineTuneProgress = MutableStateFlow(0f)
+    val fineTuneProgress: StateFlow<Float> = _fineTuneProgress.asStateFlow()
+
+    private val _serverLogsCount = MutableStateFlow(0)
+    val serverLogsCount: StateFlow<Int> = _serverLogsCount.asStateFlow()
+
+    private val _hasNewModel = MutableStateFlow(false)
+    val hasNewModel: StateFlow<Boolean> = _hasNewModel.asStateFlow()
+
     init {
         loadData()
         loadPreferences()
+        loadServerData()
     }
 
     private fun loadData() {
@@ -84,6 +103,165 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _isMLReady.value = tfliteModel.isModelReady.value
             _logsCount.value = reviewLogRepository.getLogsCount()
+        }
+    }
+
+    /**
+     * Загрузка данных с сервера
+     */
+    private fun loadServerData() {
+        viewModelScope.launch {
+            try {
+                val isAvailable = syncManager.isServerAvailable()
+                Log.d("SettingsVM", "Сервер доступен: $isAvailable")
+
+                if (isAvailable) {
+                    _fineTuneStatus.value = "Сервер доступен"
+                    updateServerLogsCount()
+                    checkForUpdates()
+                } else {
+                    _fineTuneStatus.value = "Сервер недоступен"
+                }
+            } catch (e: Exception) {
+                Log.e("SettingsVM", "Ошибка: ${e.message}")
+                _fineTuneStatus.value = "Ошибка подключения"
+            }
+        }
+    }
+    /**
+     * Обновление количества логов на сервере
+     */
+    private suspend fun updateServerLogsCount() {
+        try {
+            val count = syncManager.getServerLogsCount()
+            _serverLogsCount.value = count
+        } catch (e: Exception) {
+            // Игнорируем
+        }
+    }
+
+    /**
+     * Проверка обновлений модели
+     */
+    suspend fun checkForUpdates(): Boolean {
+        val hasUpdate = syncManager.checkForUpdates()
+        _hasNewModel.value = hasUpdate
+        if (hasUpdate) {
+            _fineTuneStatus.value = "Доступна новая модель!"
+        }
+        return hasUpdate
+    }
+
+    /**
+     * Запуск дообучения
+     */
+    fun startFineTune() {
+        viewModelScope.launch {
+            if (_isFineTuning.value) {
+                _fineTuneStatus.value = "Дообучение уже запущено"
+                return@launch
+            }
+
+            _isFineTuning.value = true
+            _fineTuneProgress.value = 0f
+            _fineTuneStatus.value = "Запуск дообучения..."
+
+            try {
+                // 1. Проверяем соединение
+                if (!syncManager.isServerAvailable()) {
+                    _fineTuneStatus.value = "Сервер недоступен"
+                    _isFineTuning.value = false
+                    return@launch
+                }
+
+                // 2. Синхронизируем логи
+                _fineTuneStatus.value = "Отправка логов..."
+                _fineTuneProgress.value = 0.1f
+                syncManager.syncLogs()
+
+                // 3. Запускаем дообучение
+                _fineTuneStatus.value = "Дообучение..."
+                _fineTuneProgress.value = 0.2f
+
+                val success = syncManager.triggerFineTune()
+                _fineTuneProgress.value = 0.8f
+
+                if (!success) {
+                    _fineTuneStatus.value = "Ошибка дообучения"
+                    _isFineTuning.value = false
+                    return@launch
+                }
+
+                // 4. Ждём завершения (мониторинг)
+                _fineTuneStatus.value = "Ожидание завершения..."
+                _fineTuneProgress.value = 0.8f
+
+                var completed = false
+                var attempts = 0
+                while (attempts < 60 && !completed) {
+                    attempts++
+                    val status = syncManager.getTrainingStatus()
+                    if (!status.isRunning) {
+                        completed = true
+                    }
+                }
+
+                if (!completed) {
+                    _fineTuneStatus.value = "Превышено время ожидания"
+                    _isFineTuning.value = false
+                    return@launch
+                }
+
+                // 5. Скачиваем модель
+                _fineTuneStatus.value = "Скачивание модели..."
+                _fineTuneProgress.value = 0.85f
+
+                val downloadSuccess = syncManager.downloadAndInstallModel { progress ->
+                    _fineTuneProgress.value = 0.85f + progress * 0.15f
+                }
+
+                if (downloadSuccess) {
+                    _fineTuneStatus.value = "Модель обновлена!"
+                    _fineTuneProgress.value = 1f
+                    _hasNewModel.value = false
+                    _isMLReady.value = tfliteModel.isModelReady.value
+
+                    // Обновляем количество логов на сервере
+                    updateServerLogsCount()
+                } else {
+                    _fineTuneStatus.value = "Ошибка скачивания модели"
+                }
+
+            } catch (e: Exception) {
+                _fineTuneStatus.value = "❌ ${e.message}"
+                e.printStackTrace()
+            } finally {
+                _isFineTuning.value = false
+            }
+        }
+    }
+
+    /**
+     * Принудительная проверка обновлений (для кнопки)
+     */
+    fun refreshServerData() {
+        viewModelScope.launch {
+            _fineTuneStatus.value = "Проверка..."
+            try {
+                if (syncManager.isServerAvailable()) {
+                    updateServerLogsCount()
+                    val hasUpdate = checkForUpdates()
+                    _fineTuneStatus.value = if (hasUpdate) {
+                        "Доступна новая модель"
+                    } else {
+                        "Модель актуальна"
+                    }
+                } else {
+                    _fineTuneStatus.value = "❌ Сервер недоступен"
+                }
+            } catch (e: Exception) {
+                _fineTuneStatus.value = "❌ ${e.message}"
+            }
         }
     }
 }

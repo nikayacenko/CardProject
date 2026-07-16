@@ -44,5 +44,12 @@ interface ReviewLogDao {
     @Query("DELETE FROM review_logs WHERE cardId = :cardId")
     suspend fun deleteByCardId(cardId: Long)
 
+    @Query("SELECT * FROM review_logs WHERE synced = 0 ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getUnsyncedLogs(limit: Int = 100): List<ReviewLog>
 
+    @Query("UPDATE review_logs SET synced = 1 WHERE id IN (:ids)")
+    suspend fun markLogsSynced(ids: List<Long>)
+
+    @Query("SELECT COUNT(*) FROM review_logs WHERE synced = 0")
+    suspend fun getUnsyncedCount(): Int
 }
