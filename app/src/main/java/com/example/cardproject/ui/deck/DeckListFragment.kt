@@ -278,8 +278,7 @@ class DeckListFragment : Fragment() {
 
         val colorTitle = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Цвет обложки:"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
-            setPadding(0, 0, 0, 10)
+            setTextAppearance(requireContext(), android.R.style.TextAppearance_Material_Body1)
         }
 
         val colorsContainer = LinearLayout(requireContext()).apply {
@@ -316,7 +315,7 @@ class DeckListFragment : Fragment() {
 
         val previewText = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Выбранный цвет:"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Body2)
+            setTextAppearance(requireContext(), android.R.style.TextAppearance_DeviceDefault)
         }
 
         previewLayout.addView(previewText)
@@ -742,7 +741,7 @@ class DeckListFragment : Fragment() {
 
         val learningModeTitle = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Режим обучения:"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
+            setTextAppearance(requireContext(), android.R.style.TextAppearance_Material_Body1)
             setPadding(0, 0, 0, 10)
         }
 
@@ -768,7 +767,7 @@ class DeckListFragment : Fragment() {
         // ОБНОВЛЕНО: Динамическое пояснение
         val modeExplanation = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Оптимально для экзаменов и долгосрочного запоминания (80-90% эффективности)"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Caption)
+            setTextAppearance(requireContext(), R.style.TextAppearance_Material3_Caption)
             setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_500))
             setPadding(0, 8, 0, 0)
         }
@@ -797,7 +796,7 @@ class DeckListFragment : Fragment() {
 
         val colorTitle = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Цвет обложки:"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
+            setTextAppearance(requireContext(), android.R.style.TextAppearance_DeviceDefault)
             setPadding(0, 0, 0, 10)
         }
 
@@ -819,7 +818,7 @@ class DeckListFragment : Fragment() {
         }
         val previewText = androidx.appcompat.widget.AppCompatTextView(requireContext()).apply {
             text = "Выбранный цвет:"
-            setTextAppearance(requireContext(), androidx.appcompat.R.style.TextAppearance_AppCompat_Body2)
+            setTextAppearance(requireContext(), android.R.style.TextAppearance_Material_Body2)
         }
 
         previewLayout.addView(previewText)

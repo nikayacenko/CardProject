@@ -12,12 +12,17 @@ import android.widget.SeekBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.example.cardproject.MainActivity
 import com.example.cardproject.R
 import com.example.cardproject.databinding.FragmentSettingsBinding
 import com.example.cardproject.model.LearningMode
+import com.example.cardproject.ui.auth.AuthViewModel
+import com.example.cardproject.ui.auth.LoginFragment
 import com.example.cardproject.utils.DataExporter
+import com.example.cardproject.utils.TokenManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -29,6 +34,7 @@ class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: SettingsViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     @Inject
     lateinit var dataExporter: DataExporter
@@ -229,6 +235,45 @@ class SettingsFragment : Fragment() {
         binding.checkUpdatesButton.setOnClickListener {
             viewModel.refreshServerData()
         }
+        binding.logoutButton.setOnClickListener {
+            showLogoutConfirmationDialog()
+        }
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Выход из аккаунта")
+            .setMessage("Вы уверены, что хотите выйти? Все данные останутся на устройстве.")
+            .setPositiveButton("Выйти") { _, _ ->
+                performLogout()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun performLogout() {
+        // Получаем MainActivity
+        val mainActivity = requireActivity() as? MainActivity
+        mainActivity?.logoutAndShowLogin()
+
+        // Или напрямую
+        val tokenManager = TokenManager(requireContext())
+        tokenManager.clear()
+
+        // Очищаем back stack
+        parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, LoginFragment())
+            .commit()
+    }
+
+    private fun navigateToLogin() {
+        // Полностью очищаем back stack и переходим на LoginFragment
+        val loginFragment = LoginFragment()
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, loginFragment)  // ← R.id.fragment_container
+            .commit()
     }
     private fun showServerUnavailableDialog() {
         MaterialAlertDialogBuilder(requireContext())

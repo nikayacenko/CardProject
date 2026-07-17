@@ -58,3 +58,30 @@ class TrainResponse(BaseModel):
     """Ответ на запуск обучения"""
     status: str
     message: str
+
+class UserRegister(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+    created_at: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: int
+    username: str
+
+class AuthResponse(BaseModel):
+    status: str
+    user: UserResponse
+    access_token: str
+    token_type: str

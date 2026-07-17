@@ -1,12 +1,15 @@
 // app/src/main/java/com/example/cardproject/data/sync/ServerApi.kt
 package com.example.cardproject.data.sync
 
-import com.example.cardproject.model.ReviewLog
+import com.example.cardproject.model.AuthRequest
+import com.example.cardproject.model.AuthResponse
+import com.example.cardproject.model.ServerModels
 import com.example.cardproject.model.ServerModels.UploadResponse
 import com.example.cardproject.model.ServerModels.ModelInfo
 import com.example.cardproject.model.ServerModels.TrainResponse
 import com.example.cardproject.model.ServerModels.TrainingStatus
 import com.example.cardproject.model.ServerModels.LogsCountResponse
+import com.example.cardproject.model.User
 import com.google.gson.annotations.SerializedName
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -15,58 +18,61 @@ import retrofit2.http.*
 interface ServerApi {
 
     // ============================================================
+    // АУТЕНТИФИКАЦИЯ
+    // ============================================================
+
+    @POST("api/auth/register")
+    suspend fun register(@Body request: AuthRequest): Response<AuthResponse>
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: AuthRequest): Response<AuthResponse>
+
+    @GET("api/auth/me")
+    suspend fun getCurrentUser(@Header("Authorization") token: String): Response<User>
+
+    // ============================================================
     // ЛОГИ
     // ============================================================
 
-    /**
-     * Отправить логи на сервер
-     */
     @POST("api/logs/upload")
     suspend fun uploadLogs(
-        @Body logs: List<ReviewLog>
+        @Header("Authorization") token: String,
+        @Body logs: List<ServerModels.LogEntryRequest>
     ): UploadResponse
 
-    /**
-     * Получить количество логов на сервере
-     */
     @GET("api/logs/count")
-    suspend fun getLogsCount(): LogsCountResponse
+    suspend fun getLogsCount(
+        @Header("Authorization") token: String
+    ): LogsCountResponse
 
     // ============================================================
     // МОДЕЛЬ
     // ============================================================
 
-    /**
-     * Получить информацию о последней модели
-     */
     @GET("api/model/latest")
-    suspend fun getLatestModel(): ModelInfo
+    suspend fun getLatestModel(
+        @Header("Authorization") token: String
+    ): ModelInfo
 
-    /**
-     * Скачать последнюю модель
-     */
     @GET("api/model/download")
-    suspend fun downloadModel(): Response<ResponseBody>
+    suspend fun downloadModel(
+        @Header("Authorization") token: String
+    ): ResponseBody
 
-    /**
-     * Запустить дообучение модели
-     */
     @POST("api/model/fine-tune")
-    suspend fun triggerFineTune(): TrainResponse
+    suspend fun triggerFineTune(
+        @Header("Authorization") token: String
+    ): TrainResponse
 
-    /**
-     * Получить статус дообучения
-     */
     @GET("api/model/status")
-    suspend fun getTrainingStatus(): TrainingStatus
+    suspend fun getTrainingStatus(
+        @Header("Authorization") token: String
+    ): TrainingStatus
 
     // ============================================================
-    // ЗДОРОВЬЕ СЕРВЕРА
+    // ЗДОРОВЬЕ
     // ============================================================
 
-    /**
-     * Проверка работоспособности
-     */
     @GET("api/health")
     suspend fun healthCheck(): HealthResponse
 

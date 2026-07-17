@@ -7,6 +7,8 @@ import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.ml.TensorFlowLiteModel
 import com.example.cardproject.model.ReviewLog
 import com.example.cardproject.model.ServerModels
+import com.example.cardproject.model.ServerModels.LogEntryRequest
+import com.example.cardproject.utils.TokenManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +18,14 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import okhttp3.ResponseBody
 
 @Singleton
 class SyncManager @Inject constructor(
     private val reviewLogRepository: ReviewLogRepository,
     @ApplicationContext private val context: Context,
-    private val tfliteModel: TensorFlowLiteModel
+    private val tfliteModel: TensorFlowLiteModel,
+    private val tokenManager: TokenManager
 ) {
 
     private val api = RetrofitClient.instance
@@ -52,9 +56,6 @@ class SyncManager @Inject constructor(
     // МЕТОДЫ
     // ============================================================
 
-    /**
-     * Проверка доступности сервера
-     */
     suspend fun isServerAvailable(): Boolean {
         return try {
             val response = api.healthCheck()
@@ -66,20 +67,22 @@ class SyncManager @Inject constructor(
         }
     }
 
-    /**
-     * Отправка логов на сервер
-     */
     suspend fun syncLogs(): Boolean {
         if (_isSyncing.value) return false
+
+        val token = tokenManager.getToken()
+        if (token == null) {
+            Log.e("SyncManager", "Нет токена, пропускаем синхронизацию")
+            _fineTuneStatus.value = "❌ Нет токена"
+            return false
+        }
 
         try {
             _isSyncing.value = true
             _syncProgress.value = 0f
             _fineTuneStatus.value = "Отправка логов..."
 
-            // Берём неотправленные логи
             val logs = reviewLogRepository.getUnsyncedLogs()
-
             if (logs.isEmpty()) {
                 _fineTuneStatus.value = "Нет новых логов"
                 _isSyncing.value = false
@@ -89,17 +92,41 @@ class SyncManager @Inject constructor(
             Log.d("SyncManager", "Отправка ${logs.size} логов на сервер")
             _syncProgress.value = 0.3f
 
-            val response = api.uploadLogs(logs)
+            val requests = logs.map { log ->
+                LogEntryRequest(
+                    cardId = log.cardId,
+                    questionType = log.questionType,
+                    cardTextLength = log.cardTextLength,
+                    hasFormulas = log.hasFormulas,
+                    difficultyScore = log.difficultyScore,
+                    responseTimeMs = log.responseTimeMs,
+                    hourOfDay = log.hourOfDay,
+                    dayOfWeek = log.dayOfWeek,
+                    fatigueLevel = log.fatigueLevel,
+                    cardsReviewedInSession = log.cardsReviewedInSession,
+                    totalReviewsBefore = log.totalReviewsBefore,
+                    correctRateBefore = log.correctRateBefore,
+                    streakCorrectBefore = log.streakCorrectBefore,
+                    daysSinceLastReview = log.daysSinceLastReview,
+                    linkedCardsCount = log.linkedCardsCount,
+                    linkedCardsMastery = log.linkedCardsMastery,
+                    wasCorrect = log.wasCorrect,
+                    timestamp = log.timestamp
+                )
+            }
 
-            if (response.status == "ok" && response.saved > 0) {
-                // Отмечаем логи как отправленные
+            // 🔥 Вызов API
+            val result: ServerModels.UploadResponse = api.uploadLogs("Bearer $token", requests)
+
+            // 🔥 Проверяем поля result
+            if (result.status == "ok" && result.saved > 0) {
                 reviewLogRepository.markLogsSynced(logs)
                 _syncProgress.value = 1f
-                _fineTuneStatus.value = "Отправлено ${response.saved} логов"
-                Log.d("SyncManager", "✅ Отправлено ${response.saved} логов")
+                _fineTuneStatus.value = "Отправлено ${result.saved} логов"
+                Log.d("SyncManager", "✅ Отправлено ${result.saved} логов")
                 return true
             } else {
-                _fineTuneStatus.value = "Ошибка: ${response.message ?: "неизвестная"}"
+                _fineTuneStatus.value = "Ошибка: ${result.message ?: "неизвестная"}"
                 return false
             }
 
@@ -112,11 +139,15 @@ class SyncManager @Inject constructor(
         }
     }
 
-    /**
-     * Запуск дообучения модели на сервере
-     */
     suspend fun triggerFineTune(): Boolean {
         if (_isFineTuning.value) return false
+
+        val token = tokenManager.getToken()
+        if (token == null) {
+            _fineTuneStatus.value = "❌ Нет токена"
+            return false
+        }
+
         if (!isServerAvailable()) {
             _fineTuneStatus.value = "❌ Сервер недоступен"
             return false
@@ -127,7 +158,6 @@ class SyncManager @Inject constructor(
             _fineTuneProgress.value = 0f
             _fineTuneStatus.value = "📤 Отправка логов..."
 
-            // Сначала отправляем логи
             val syncSuccess = syncLogs()
             if (!syncSuccess) {
                 _fineTuneStatus.value = "❌ Ошибка отправки логов"
@@ -138,7 +168,8 @@ class SyncManager @Inject constructor(
             _fineTuneStatus.value = "🧠 Запуск дообучения..."
             _fineTuneProgress.value = 0.2f
 
-            val response = api.triggerFineTune()
+            // 🔥 БЕЗ Response — просто вызываем
+            val response = api.triggerFineTune("Bearer $token")
 
             if (response.status != "started") {
                 _fineTuneStatus.value = "❌ ${response.message}"
@@ -146,22 +177,21 @@ class SyncManager @Inject constructor(
                 return false
             }
 
-            // Ждём завершения дообучения
             _fineTuneStatus.value = "⏳ Дообучение выполняется (1-3 минуты)..."
             _fineTuneProgress.value = 0.3f
 
             var attempts = 0
             var lastProgress = 0.3f
 
-            while (attempts < 60) { // максимум 5 минут
+            while (attempts < 60) {
                 delay(5000)
                 attempts++
 
                 try {
-                    val status = api.getTrainingStatus()
+                    // 🔥 БЕЗ Response — просто вызываем
+                    val status = api.getTrainingStatus("Bearer $token")
 
                     if (status.isRunning) {
-                        // Обновляем прогресс (от 30% до 80%)
                         val progress = 0.3f + (attempts / 60f) * 0.5f
                         if (progress > lastProgress) {
                             lastProgress = progress
@@ -169,11 +199,9 @@ class SyncManager @Inject constructor(
                         }
                         _fineTuneStatus.value = "⏳ Дообучение... ${status.message}"
                     } else {
-                        // Дообучение завершено
                         _fineTuneStatus.value = "📥 Скачивание модели..."
                         _fineTuneProgress.value = 0.8f
 
-                        // Скачиваем и устанавливаем
                         val downloadSuccess = downloadAndInstallModel { progress ->
                             _fineTuneProgress.value = 0.8f + progress * 0.2f
                             _fineTuneStatus.value = "📥 Скачивание: ${(progress * 100).toInt()}%"
@@ -208,64 +236,50 @@ class SyncManager @Inject constructor(
         }
     }
 
-    /**
-     * Скачивание и установка новой модели
-     */
     suspend fun downloadAndInstallModel(onProgress: (Float) -> Unit = {}): Boolean {
+        val token = tokenManager.getToken()
+        if (token == null) {
+            Log.e("SyncManager", "Нет токена")
+            return false
+        }
+
         try {
-            // Получаем информацию о модели
-            val modelInfo = api.getLatestModel()
+            // 🔥 БЕЗ Response — просто получаем ModelInfo
+            val modelInfo = api.getLatestModel("Bearer $token")
             Log.d("SyncManager", "Скачивание модели v${modelInfo.version}")
 
-            // Скачиваем файл
-            val response = api.downloadModel()
+            // 🔥 БЕЗ Response — просто получаем ResponseBody
+            val responseBody: ResponseBody = api.downloadModel("Bearer $token")
 
-            if (!response.isSuccessful) {
-                Log.e("SyncManager", "Ошибка скачивания: ${response.code()}")
-                return false
-            }
-
-            val body = response.body()
-            if (body == null) {
-                Log.e("SyncManager", "Пустой ответ от сервера")
-                return false
-            }
-
-            // Сохраняем во временный файл
             val tempFile = File(context.cacheDir, "model_temp.tflite")
             tempFile.deleteOnExit()
 
-            body.byteStream().use { inputStream ->
+            responseBody.byteStream().use { inputStream ->
                 FileOutputStream(tempFile).use { outputStream ->
                     val buffer = ByteArray(8192)
                     var bytesRead: Int
                     var totalBytesRead = 0L
-                    val contentLength = body.contentLength()
+                    val contentLength = responseBody.contentLength()
 
                     while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                         outputStream.write(buffer, 0, bytesRead)
                         totalBytesRead += bytesRead
-
                         if (contentLength > 0) {
-                            val progress = totalBytesRead.toFloat() / contentLength
-                            onProgress(progress)
+                            onProgress(totalBytesRead.toFloat() / contentLength)
                         }
                     }
                 }
             }
 
-            // Проверяем файл
             if (tempFile.length() < 1000) {
                 Log.e("SyncManager", "Файл слишком маленький: ${tempFile.length()}")
                 tempFile.delete()
                 return false
             }
 
-            // Копируем в постоянное хранилище
             val modelsDir = File(context.filesDir, "models")
             modelsDir.mkdirs()
 
-            // Бэкап старой модели
             val oldModelFile = File(modelsDir, "forgetting_model.tflite")
             if (oldModelFile.exists()) {
                 val backupFile = File(modelsDir, "forgetting_model_backup.tflite")
@@ -273,18 +287,15 @@ class SyncManager @Inject constructor(
                 Log.d("SyncManager", "Создан бэкап старой модели")
             }
 
-            // Копируем новую модель
             val newModelFile = File(modelsDir, "forgetting_model.tflite")
             tempFile.copyTo(newModelFile, overwrite = true)
             tempFile.delete()
 
             Log.d("SyncManager", "Модель сохранена: ${newModelFile.absolutePath}")
 
-            // Обновляем версию
             val prefs = context.getSharedPreferences("model", Context.MODE_PRIVATE)
             prefs.edit().putInt("model_version", modelInfo.version).apply()
 
-            // Обновляем модель в памяти
             tfliteModel.updateModel(newModelFile)
 
             return true
@@ -295,14 +306,18 @@ class SyncManager @Inject constructor(
         }
     }
 
-    /**
-     * Проверка наличия новой модели на сервере
-     */
     suspend fun checkForUpdates(): Boolean {
+        val token = tokenManager.getToken()
+        if (token == null) {
+            Log.e("SyncManager", "Нет токена")
+            return false
+        }
+
         return try {
             if (!isServerAvailable()) return false
 
-            val serverInfo = api.getLatestModel()
+            // 🔥 БЕЗ Response — просто получаем ModelInfo
+            val serverInfo = api.getLatestModel("Bearer $token")
             val prefs = context.getSharedPreferences("model", Context.MODE_PRIVATE)
             val localVersion = prefs.getInt("model_version", 0)
 
@@ -319,9 +334,6 @@ class SyncManager @Inject constructor(
         }
     }
 
-    /**
-     * Полное обновление (проверка + скачивание)
-     */
     suspend fun updateModelIfAvailable(): Boolean {
         val hasUpdate = checkForUpdates()
         if (!hasUpdate) {
@@ -342,28 +354,33 @@ class SyncManager @Inject constructor(
         return success
     }
 
-    // data/sync/SyncManager.kt
-
-    /**
-     * Получить количество логов на сервере
-     */
     suspend fun getServerLogsCount(): Int {
+        val token = tokenManager.getToken()
+        if (token == null) {
+            Log.e("SyncManager", "Нет токена")
+            return 0
+        }
+
         return try {
-            val response = api.getLogsCount()
+            val response = api.getLogsCount("Bearer $token")
             response.count
         } catch (e: Exception) {
             Log.e("SyncManager", "Ошибка получения количества логов: ${e.message}")
             0
         }
     }
-    // data/sync/SyncManager.kt
 
-    /**
-     * Получить статус дообучения с сервера
-     */
     suspend fun getTrainingStatus(): ServerModels.TrainingStatus {
+        val token = tokenManager.getToken()
+        if (token == null) {
+            return ServerModels.TrainingStatus(
+                isRunning = false,
+                message = "Нет токена"
+            )
+        }
+
         return try {
-            api.getTrainingStatus()
+            api.getTrainingStatus("Bearer $token")
         } catch (e: Exception) {
             Log.e("SyncManager", "Ошибка получения статуса: ${e.message}")
             ServerModels.TrainingStatus(

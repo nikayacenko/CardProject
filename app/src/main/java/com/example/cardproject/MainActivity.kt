@@ -6,13 +6,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.FragmentManager
 import androidx.navigation.fragment.NavHostFragment
 import com.example.cardproject.databinding.ActivityMainBinding
+import com.example.cardproject.ui.auth.LoginFragment
 import com.example.cardproject.ui.deck.DeckListFragment
+import com.example.cardproject.utils.TokenManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
@@ -35,6 +39,34 @@ class MainActivity : AppCompatActivity() {
         // Простая загрузка только DeckListFragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, DeckListFragment())
+            .commit()
+
+        tokenManager = TokenManager(applicationContext)
+
+        // Проверяем авторизацию
+        if (tokenManager.isLoggedIn()) {
+            showDeckList()
+        } else {
+            showLogin()
+        }
+    }
+    private fun showLogin() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, LoginFragment())
+            .commit()
+    }
+
+    private fun showDeckList() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, DeckListFragment())
+            .commit()
+    }
+
+    fun logoutAndShowLogin() {
+        tokenManager.clear()
+        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, LoginFragment())
             .commit()
     }
 }

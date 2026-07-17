@@ -546,6 +546,21 @@
                     <!--                        android:text="Статус модели:"-->
                     <!--                        android:textSize="14sp"/>-->
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/gray_200"
+                        android:layout_marginVertical="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/logoutButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="🚪 Выйти из аккаунта"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="@color/red_500" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

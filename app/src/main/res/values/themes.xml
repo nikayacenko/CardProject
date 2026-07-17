@@ -8,6 +8,10 @@
 <!-- верхняя часть (нижняя и статус бар в colors-->
         <item name="colorPrimarySurface">@color/your_primary_color</item>
     </style>
+    <style name="TextAppearance_Material3_Caption" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
     <style name="RoundedDialogTheme" parent="ThemeOverlay.Material3.Dialog.Alert">
         <item name="dialogCornerRadius">16dp</item>
         <item name="android:windowBackground">@android:color/transparent</item>
