@@ -6,20 +6,32 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "cards",
+@Entity(
+    tableName = "cards",
     foreignKeys = [
+        ForeignKey(
+            entity = LocalUser::class,
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.NO_ACTION
+        ),
         ForeignKey(
             entity = Deck::class,
             parentColumns = ["id"],
             childColumns = ["deckId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE  // Если колода удалена - удалить карточки
         )
     ],
-    indices = [Index("deckId"), Index("nextReview")]
+    indices = [
+        Index(value = ["userId"]),
+        Index(value = ["deckId"]),
+        Index(value = ["userId", "deckId"])  // Композитный индекс для частых запросов
+    ]
 )
 data class Card(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: Long,
     val deckId: Long,
     val front: String,
     val back: String,

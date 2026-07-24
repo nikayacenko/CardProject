@@ -15,6 +15,7 @@ import com.example.cardproject.model.LearningMode
 import com.example.cardproject.model.ReviewLog
 import com.example.cardproject.model.SessionStats
 import com.example.cardproject.model.SessionType
+import com.example.cardproject.utils.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,8 @@ class LearningViewModel @Inject constructor(
     private val sessionStatsRepository: SessionStatsRepository,
     private val reviewLogRepository: ReviewLogRepository,
     private val mlCalculator: MLSpacedRepetitionCalculator,
-    private val tfliteModel: TensorFlowLiteModel
+    private val tfliteModel: TensorFlowLiteModel,
+    private val tokenManager: TokenManager  // 🔥 ДОБАВЛЯЕМ
 ) : ViewModel() {
 
     private var deckId: Long = -1
@@ -83,7 +85,10 @@ class LearningViewModel @Inject constructor(
 
     fun answerCard(card: Card, quality: Int, responseTimeMs: Long) {
         viewModelScope.launch {
+            val userId = tokenManager.getUserId()
+                ?: throw IllegalStateException("User not logged in")
             val context = _sessionContext.value
+            println("👤 [LearningVM] Создание лога для userId=$userId")
 
             // 1. МГНОВЕННОЕ СОХРАНЕНИЕ ПРОГРЕССА КАРТОЧКИ
             val updatedCard = mlCalculator.calculateNextReview(
@@ -92,7 +97,16 @@ class LearningViewModel @Inject constructor(
             cardRepository.updateCard(updatedCard)
 
             // 2. СОХРАНЕНИЕ ЛОГА (ДЛЯ ОБУЧЕНИЯ МОДЕЛИ)
-            val log = ReviewLog.from(card, context, quality, responseTimeMs, 0.5f, card.successRate)
+            val log = ReviewLog.from(
+                card = card,
+                context = context,
+                quality = quality,
+                responseTimeMs = responseTimeMs,
+                linkedCardsMastery = 0.5f,
+                correctRateBefore = card.successRate,
+                userId = userId  // 🔥 ПЕРЕДАЁМ userId
+            )
+            println("📝 [LearningVM] Лог создан: userId=${log.userId}, cardId=${log.cardId}")
             reviewLogRepository.insertLog(log)
 
             // 3. ДОБАВЛЕНИЕ В СТАТИСТИКУ СЕССИИ

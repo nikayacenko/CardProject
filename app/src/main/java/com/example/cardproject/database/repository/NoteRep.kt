@@ -4,6 +4,7 @@ import com.example.cardproject.database.dao.NoteDao
 import com.example.cardproject.database.dao.TagDao
 import com.example.cardproject.model.Note
 import com.example.cardproject.model.NoteWithTags
+import com.example.cardproject.utils.TokenManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -12,7 +13,8 @@ import javax.inject.Singleton
 @Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
-    private val tagDao: TagDao
+    private val tagDao: TagDao,
+    private val tokenManager: TokenManager
 ) {
 
     fun getAllNotesWithTags(): Flow<List<NoteWithTags>> {
@@ -27,7 +29,15 @@ class NoteRepository @Inject constructor(
     }
 
     suspend fun createNote(title: String, content: String, tags: List<String>): Long {
-        val note = Note(title = title, content = content)
+        val userId = tokenManager.getUserId()
+            ?: throw IllegalStateException("User not logged in")
+
+        // 🔥 СОЗДАЁМ ЗАМЕТКУ С userId
+        val note = Note(
+            userId = userId,
+            title = title,
+            content = content
+        )
         val noteId = noteDao.insertNote(note)
 
         if (tags.isNotEmpty()) {

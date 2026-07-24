@@ -1,12 +1,16 @@
 package com.example.cardproject.database.repository
 
+import android.util.Log
 import com.example.cardproject.database.dao.CardDao
 import com.example.cardproject.database.dao.DeckDao
 import com.example.cardproject.database.dao.SessionStatsDao
 import com.example.cardproject.database.dao.ReviewLogDao
 import com.example.cardproject.model.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +21,7 @@ class DeckStatsRepository @Inject constructor(
     private val sessionStatsDao: SessionStatsDao,
     private val reviewLogDao: ReviewLogDao  // Добавили зависимость
 ) {
+    private val TAG = "DeckStatsRepository"
 
     suspend fun getAllDecksStatsSync(): List<DeckStats> {
         val decks = deckDao.getAllDecksSync()
@@ -213,4 +218,37 @@ class DeckStatsRepository @Inject constructor(
         // Нормализуем до диапазона -1..1
         return (slope / 1000.0).toFloat().coerceIn(-1f, 1f)
     }
+
+    suspend fun getSessionHistory(deckId: Long): List<SessionStats> {
+//        return withContext(Dispatchers.IO) {
+//            // Используем существующий DAO для SessionStats
+//            sessionStatsDao.getSessionsByDeckId(deckId)
+//        }
+        return try {
+            val sessions = sessionStatsDao.getSessionsByDeckId(deckId)
+            Log.d(TAG, "📊 Загружено ${sessions.size} сессий для колоды $deckId")
+            sessions
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Ошибка загрузки сессий: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun getFirstSessionDate(deckId: Long): Date? {
+        return try {
+            val sessions = sessionStatsDao.getSessionsByDeckId(deckId)
+            val firstSession = sessions.minByOrNull { it.date }
+            firstSession?.let {
+                val date = Date(it.date)
+                Log.d(TAG, "📅 Первая сессия: $date для колоды $deckId")
+                date
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Ошибка получения первой сессии: ${e.message}")
+            null
+        }
+
+    }
+
+
 }

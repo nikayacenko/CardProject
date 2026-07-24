@@ -11,6 +11,7 @@ import com.example.cardproject.model.Deck
 import com.example.cardproject.model.DeckWithTags
 import com.example.cardproject.model.LearningMode
 import com.example.cardproject.utils.DataSyncManager
+import com.example.cardproject.utils.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,9 +21,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class DeckListViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: DeckRepository
+@HiltViewModel
+class DeckListViewModel @Inject constructor(
+    private val repository: DeckRepository,
+    private val cardRepository: CardRepository,
+    private val tokenManager: TokenManager  // 🔥 ДОБАВЛЯЕМ
+) : ViewModel() {
 
     // Потоки для поиска и фильтрации
     private val _searchQuery = MutableStateFlow("")
@@ -36,21 +40,21 @@ class DeckListViewModel(application: Application) : AndroidViewModel(application
     val selectedTags: StateFlow<Set<String>> = _selectedTags
     val availableTags: StateFlow<List<String>> = _availableTags
 
-    init {
-        val deckDao = AppDatabase.getInstance(application).deckDao()
-        val tagDao = AppDatabase.getInstance(application).tagDao()
-        val cardRepository = CardRepository(AppDatabase.getInstance(application).cardDao())
-        repository = DeckRepository(deckDao, tagDao, cardRepository)
-
-        loadAllDecks()
-        loadAvailableTags()
-        viewModelScope.launch {
-            DataSyncManager.refreshDecks.collect {
-                println("🔄 DeckListViewModel: получено уведомление об изменении карточек")
-                loadAllDecks() // Перезагружаем колоды с актуальными счетчиками
-            }
-        }
-    }
+//    init {
+//        val deckDao = AppDatabase.getInstance(application).deckDao()
+//        val tagDao = AppDatabase.getInstance(application).tagDao()
+//        val cardRepository = CardRepository(AppDatabase.getInstance(application).cardDao())
+//        repository = DeckRepository(deckDao, tagDao, cardRepository)
+//
+//        loadAllDecks()
+//        loadAvailableTags()
+//        viewModelScope.launch {
+//            DataSyncManager.refreshDecks.collect {
+//                println("🔄 DeckListViewModel: получено уведомление об изменении карточек")
+//                loadAllDecks() // Перезагружаем колоды с актуальными счетчиками
+//            }
+//        }
+//    }
 
     // КОМБИНИРУЕМ ВСЕ ФИЛЬТРЫ ВМЕСТЕ - используем _allDecks как источник
     val decks = combine(
@@ -170,9 +174,28 @@ class DeckListViewModel(application: Application) : AndroidViewModel(application
     ) {
         viewModelScope.launch {
             println("🔄 Создание колоды: '$name' с тегами: $tags, режим: $learningMode")
-            repository.createDeck(name, description, tags, coverColor, learningMode)
 
-            // ПЕРЕЗАГРУЖАЕМ ВСЕ ДАННЫЕ
+            val userId = tokenManager.getUserId()
+                ?: throw IllegalStateException("User not logged in") // ← захардкодить 1
+
+
+            if (userId == null) {
+                println("❌ Ошибка: userId == null!")
+                return@launch
+            }
+
+            println("✅ userId найден: $userId")
+
+            // 🔥 ПЕРЕДАЁМ userId В ПЕРВОМ ПАРАМЕТРЕ
+            repository.createDeck(
+                userId = userId,
+                name = name,
+                description = description,
+                tags = tags,
+                coverColor = coverColor,
+                learningMode = learningMode
+            )
+
             loadAllDecks()
             loadAvailableTags()
             println("✅ Колода создана, данные обновлены")

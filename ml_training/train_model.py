@@ -496,17 +496,30 @@ class ModelTrainer:
 
         # Конвертация
         converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+        # Оптимизации
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.target_spec.supported_types = [tf.float16]
 
-        tflite_model = converter.convert()
+        try:
+            tflite_model = converter.convert()
 
-        # Сохранение
-        with open(tflite_path, 'wb') as f:
-            f.write(tflite_model)
+            with open(tflite_path, 'wb') as f:
+                f.write(tflite_model)
 
-        print(f"TFLite модель сохранена: {tflite_path}")
-        return tflite_model
+            print(f"   ✅ TFLite сохранен: {tflite_path}")
+
+        except Exception as e:
+            print(f"   ❌ Ошибка конвертации: {e}")
+            print("   🔄 Пробуем без оптимизаций...")
+
+            # Если ошибка - пробуем без оптимизаций
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
+            tflite_model = converter.convert()
+
+            with open(tflite_path, 'wb') as f:
+                f.write(tflite_model)
+
+            print(f"   ✅ TFLite сохранен (без оптимизаций): {tflite_path}")
 
 # ==================================================
 # ОСНОВНАЯ ФУНКЦИЯ

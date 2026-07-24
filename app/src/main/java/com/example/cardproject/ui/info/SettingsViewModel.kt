@@ -103,6 +103,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _isMLReady.value = tfliteModel.isModelReady.value
             _logsCount.value = reviewLogRepository.getLogsCount()
+            refreshServerData()
         }
     }
 
@@ -226,6 +227,8 @@ class SettingsViewModel @Inject constructor(
                     _hasNewModel.value = false
                     _isMLReady.value = tfliteModel.isModelReady.value
 
+                    _isMLReady.value = tfliteModel.isModelReady.value
+                    Log.d("SettingsVM", "✅ Модель загружена, isMLReady=${_isMLReady.value}")
                     // Обновляем количество логов на сервере
                     updateServerLogsCount()
                 } else {

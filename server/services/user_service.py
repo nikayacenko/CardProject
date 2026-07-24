@@ -25,17 +25,27 @@ class UserService:
         conn = self.db._get_connection()
         cursor = conn.cursor()
 
+        # Создаем таблицу если ее нет
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 email TEXT,
-                password_hash TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-
         conn.commit()
+
+        # Проверяем и добавляем колонку password_hash
+        cursor.execute("PRAGMA table_info(users)")
+        columns = [col[1] for col in cursor.fetchall()]
+
+        if 'password_hash' not in columns:
+            print("⚠️ Добавляем колонку password_hash...")
+            cursor.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+            conn.commit()
+            print("✅ Колонка password_hash добавлена")
+
         conn.close()
         print("✅ Таблица users создана/проверена")
 

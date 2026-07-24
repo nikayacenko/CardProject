@@ -28,7 +28,7 @@ class SyncManager @Inject constructor(
     private val tokenManager: TokenManager
 ) {
 
-    private val api = RetrofitClient.instance
+    private val api = RetrofitClient.getApi()
 
     // ============================================================
     // СОСТОЯНИЕ
@@ -76,13 +76,18 @@ class SyncManager @Inject constructor(
             _fineTuneStatus.value = "❌ Нет токена"
             return false
         }
-
+        val userId = tokenManager.getUserId()
+        if (userId == null) {
+            Log.e("SyncManager", "Нет userId, пропускаем синхронизацию")
+            _fineTuneStatus.value = "❌ Нет userId"
+            return false
+        }
         try {
             _isSyncing.value = true
             _syncProgress.value = 0f
             _fineTuneStatus.value = "Отправка логов..."
 
-            val logs = reviewLogRepository.getUnsyncedLogs()
+            val logs = reviewLogRepository.getUnsyncedLogs(userId)
             if (logs.isEmpty()) {
                 _fineTuneStatus.value = "Нет новых логов"
                 _isSyncing.value = false

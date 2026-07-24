@@ -11,13 +11,14 @@ import com.example.cardproject.database.dao.NoteDao
 import com.example.cardproject.database.dao.ReviewLogDao
 import com.example.cardproject.database.dao.SessionStatsDao
 import com.example.cardproject.database.dao.TagDao
+import com.example.cardproject.database.dao.UserDao
 import com.example.cardproject.model.Deck
 import com.example.cardproject.model.Card
 import com.example.cardproject.model.Note
 import com.example.cardproject.model.SessionStats
 import com.example.cardproject.model.Tag
 import com.example.cardproject.model.ReviewLog
-
+import com.example.cardproject.model.LocalUser
 @Database(
     entities = [
         Deck::class,
@@ -25,9 +26,10 @@ import com.example.cardproject.model.ReviewLog
         Tag::class,
         SessionStats::class,
         Note::class,
-        ReviewLog::class
+        ReviewLog::class,
+        LocalUser::class
     ],
-    version = 14,
+    version = 17,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,6 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun sessionStatsDao(): SessionStatsDao
     abstract fun noteDao(): NoteDao
+    abstract fun userDao(): UserDao
 
     abstract fun reviewLogDao(): ReviewLogDao
 

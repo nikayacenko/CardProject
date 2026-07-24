@@ -8,6 +8,7 @@ import com.example.cardproject.model.ReviewLog
 import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.model.MLPrediction
 import com.example.cardproject.model.QuestionType
+import com.example.cardproject.utils.TokenManager
 import kotlin.math.max
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class MLSpacedRepetitionCalculator @Inject constructor(
     private val tfliteModel: TensorFlowLiteModel,
-    private val reviewLogRepository: ReviewLogRepository
+    private val reviewLogRepository: ReviewLogRepository,
+    private val tokenManager: TokenManager
 ) {
 
     // Базовые интервалы (в днях) для разных режимов
@@ -45,7 +47,7 @@ class MLSpacedRepetitionCalculator @Inject constructor(
         val virtualNow = context.sessionStartTime
         // 2. Получаем среднюю выученность связанных карточек
         val linkedMastery = calculateLinkedCardsMastery(card)
-
+        val userId = getCurrentUserId()
         // 3. Создаем лог с признаками
         val log = ReviewLog.from(
             card = card,
@@ -53,7 +55,8 @@ class MLSpacedRepetitionCalculator @Inject constructor(
             quality = quality,
             responseTimeMs = responseTimeMs,
             correctRateBefore = correctRate,
-            linkedCardsMastery = linkedMastery
+            linkedCardsMastery = linkedMastery,
+            userId = userId
         )
 
         // 4. Сохраняем лог в БД
@@ -90,7 +93,10 @@ class MLSpacedRepetitionCalculator @Inject constructor(
             easeFactor = calculateEaseFactor(card, prediction)
         )
     }
-
+    private fun getCurrentUserId(): Long {
+        return tokenManager.getUserId()
+            ?: throw IllegalStateException("User not logged in")
+    }
     // Добавьте метод, возвращающий предсказание
     suspend fun calculateNextReviewWithPrediction(
         card: Card,
@@ -102,14 +108,15 @@ class MLSpacedRepetitionCalculator @Inject constructor(
 
         val correctRate = card.successRate
         val virtualNow = context.sessionStartTime
-
+        val userId = getCurrentUserId()
         val log = ReviewLog.from(
             card = card,
             context = context,
             quality = quality,
             responseTimeMs = responseTimeMs,
             correctRateBefore = correctRate,
-            linkedCardsMastery = 0.5f
+            linkedCardsMastery = 0.5f,
+            userId = userId
         )
 
         if (quality == 0) {
@@ -315,6 +322,7 @@ class MLSpacedRepetitionCalculator @Inject constructor(
         // 1. Получаем текущий процент успеха карточки
         val correctRate = card.successRate
         val virtualNow = context.sessionStartTime
+        val userId = getCurrentUserId()
         // 2. Создаем лог с признаками (без сохранения)
         val log = ReviewLog.from(
             card = card,
@@ -322,7 +330,8 @@ class MLSpacedRepetitionCalculator @Inject constructor(
             quality = quality,
             responseTimeMs = responseTimeMs,
             correctRateBefore = correctRate,
-            linkedCardsMastery = 0.5f
+            linkedCardsMastery = 0.5f,
+            userId = userId
         )
 
         // 3. Если ответ неправильный - сбрасываем прогресс

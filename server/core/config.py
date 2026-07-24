@@ -21,7 +21,7 @@ class Settings:
     DB_PATH = os.getenv("DB_PATH", str(BASE_DIR / "data" / "logs.db"))
 
     # Модели
-    MODELS_DIR = os.getenv("MODELS_DIR", str(BASE_DIR / "static" / "models"))
+    MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
 
     # Пути к скриптам обучения (относительно корня проекта)
     TRAINING_SCRIPT = os.getenv(

@@ -4,9 +4,15 @@
     <option name="sourcePathsSet">
       <set>
         <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/tensorflow/_api/v2/config" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/tensorflow/_api/v2/experimental" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/keras/src/backend" />
         <option value="$PROJECT_DIR$/server" />
-        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/websockets" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/tensorflow/_api/v2/compat/v1/config" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/absl" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/keras/_tf_keras/keras" />
         <option value="$PROJECT_DIR$/server/venv/Lib/site-packages" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/websockets" />
+        <option value="$PROJECT_DIR$/server/venv/Lib/site-packages/aiofiles" />
       </set>
     </option>
   </component>

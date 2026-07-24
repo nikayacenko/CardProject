@@ -1,6 +1,11 @@
 package com.example.cardproject.di
 
 import android.content.Context
+import com.example.cardproject.data.repository.AuthRepository
+import com.example.cardproject.data.repository.UserRepository
+import com.example.cardproject.data.sync.RetrofitClient
+import com.example.cardproject.data.sync.ServerApi
+import com.example.cardproject.data.sync.SyncManager
 import com.example.cardproject.database.AppDatabase
 import com.example.cardproject.database.dao.CardDao
 import com.example.cardproject.database.dao.DeckDao
@@ -8,12 +13,17 @@ import com.example.cardproject.database.dao.NoteDao
 import com.example.cardproject.database.dao.ReviewLogDao
 import com.example.cardproject.database.dao.SessionStatsDao
 import com.example.cardproject.database.dao.TagDao
+import com.example.cardproject.database.dao.UserDao
 import com.example.cardproject.database.repository.CardRepository
 import com.example.cardproject.database.repository.DeckRepository
 import com.example.cardproject.database.repository.DeckStatsRepository
 import com.example.cardproject.database.repository.NoteRepository
 import com.example.cardproject.database.repository.ReviewLogRepository
 import com.example.cardproject.database.repository.SessionStatsRepository
+import com.example.cardproject.ml.TensorFlowLiteModel
+import com.example.cardproject.network.AuthInterceptor
+import com.example.cardproject.utils.SessionManager
+import com.example.cardproject.utils.TokenManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,17 +77,20 @@ object AppModule {
     fun provideDeckRepository(
         deckDao: DeckDao,
         tagDao: TagDao,
-        cardRepository: CardRepository
+        cardRepository: CardRepository,
+        tokenManager: TokenManager
     ): DeckRepository {
-        return DeckRepository(deckDao, tagDao, cardRepository)
+        return DeckRepository(deckDao, tagDao, cardRepository, tokenManager)
     }
 
     @Provides
+    @Singleton
     fun provideNoteRepository(
         noteDao: NoteDao,
-        tagDao: TagDao
+        tagDao: TagDao,
+        tokenManager: TokenManager  // 🔥 ДОБАВЛЯЕМ
     ): NoteRepository {
-        return NoteRepository(noteDao, tagDao)
+        return NoteRepository(noteDao, tagDao, tokenManager)  // 🔥 ПЕРЕДАЁМ
     }
 
     @Provides
@@ -109,4 +122,67 @@ object AppModule {
         return ReviewLogRepository(reviewLogDao)
     }
 
+    @Provides
+    @Singleton
+    fun provideUserDao(appDatabase: AppDatabase): UserDao {
+        return appDatabase.userDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        api: ServerApi,
+        tokenManager: TokenManager
+    ): AuthRepository {
+        return AuthRepository(api, tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSyncManager(
+        reviewLogRepository: ReviewLogRepository,
+        @ApplicationContext context: Context,
+        tfliteModel: TensorFlowLiteModel,
+        tokenManager: TokenManager,
+        api: ServerApi
+    ): SyncManager {
+        return SyncManager(reviewLogRepository, context, tfliteModel, tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
+        return TokenManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor {
+        return AuthInterceptor(tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideServerApi(authInterceptor: AuthInterceptor): ServerApi {
+        return RetrofitClient.getApi(authInterceptor)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        userDao: UserDao,
+        tokenManager: TokenManager
+    ): UserRepository {
+        return UserRepository(userDao, tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSessionManager(
+        tokenManager: TokenManager,
+        userRepository: UserRepository
+    ): SessionManager {
+        return SessionManager(tokenManager, userRepository)
+    }
 }

@@ -8,7 +8,21 @@ data class User(
     val email: String? = null,
     @SerializedName("created_at")
     val createdAt: String
-)
+){
+    fun toLocalUser(): LocalUser {
+        return LocalUser(
+            id = this.id.toLong(),
+            username = this.username,
+            email = this.email,
+            displayName = this.username,
+            avatarUrl = null,
+            createdAt = System.currentTimeMillis(),
+            lastLoginAt = System.currentTimeMillis(),
+            isActive = true,
+            modelVersion = 0
+        )
+    }
+}
 
 data class AuthRequest(
     val username: String,

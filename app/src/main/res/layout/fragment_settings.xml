@@ -503,6 +503,120 @@
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+            <!-- ============================================================ -->
+            <!-- СЕКЦИЯ: ДООБУЧЕНИЕ НА УСТРОЙСТВЕ (НОВАЯ)                     -->
+            <!-- ============================================================ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/onDeviceTrainCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="🧠 Дообучение на устройстве"
+                        android:textColor="#9371FA"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Статус -->
+                    <TextView
+                        android:id="@+id/onDeviceStatusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Готово к дообучению"
+                        android:textColor="@color/gray_600"
+                        android:textSize="14sp" />
+
+                    <!-- Количество логов на устройстве -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📊 Логов на устройстве:"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/deviceLogsCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#9371FA"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Прогресс дообучения -->
+                    <LinearLayout
+                        android:id="@+id/onDeviceProgressLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/onDeviceProgressText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Дообучение: 0%"
+                            android:textColor="#9371FA"
+                            android:textSize="14sp" />
+
+                        <ProgressBar
+                            android:id="@+id/onDeviceProgressBar"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="4dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressTint="#9371FA" />
+
+                    </LinearLayout>
+
+                    <!-- Кнопка дообучения на устройстве -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/onDeviceTrainButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="🚀 Дообучить модель на устройстве"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#4A90D9" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="🔒 Данные не покидают устройство. Требуется 50+ логов."
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

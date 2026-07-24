@@ -105,7 +105,30 @@ def train_synthetic_model(
 
     # Конвертируем в TFLite
     tflite_path = output_dir / 'forgetting_model.tflite'
-    trainer.convert_to_tflite(str(keras_path), str(tflite_path))
+
+    # Загружаем модель
+    model = tf.keras.models.load_model(str(keras_path))
+
+    # Конвертируем
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+    # 🔥 ТОЛЬКО ОПТИМИЗАЦИЯ
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+    # 🔥 ТОЛЬКО СТАНДАРТНЫЕ ОПЕРАЦИИ (БЕЗ SELECT_TF_OPS)
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS,
+    ]
+
+    # Конвертируем
+    tflite_model = converter.convert()
+
+    # Сохраняем
+    with open(tflite_path, 'wb') as f:
+        f.write(tflite_model)
+
+    print(f"   ✅ TFLite сохранён: {tflite_path}")
+    print(f"   📦 Размер: {tflite_path.stat().st_size / 1024:.1f} KB")
 
     # Метаданные
     metadata = {

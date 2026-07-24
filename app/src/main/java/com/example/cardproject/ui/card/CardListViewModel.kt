@@ -20,11 +20,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-class CardListViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: CardRepository
-    private val deckRepository: DeckRepository
+import com.example.cardproject.utils.TokenManager
+@HiltViewModel
+class CardListViewModel @Inject constructor(
+    private val repository: CardRepository,
+    private val deckRepository: DeckRepository,
+    private val tokenManager: TokenManager  // 🔥 ДОБАВЛЯЕМ
+) : ViewModel() {
     private var currentDeckId: Long = -1
 
     // ДОБАВЛЕНО: Flow для хранения режима обучения
@@ -33,14 +35,14 @@ class CardListViewModel(application: Application) : AndroidViewModel(application
 
 
 
-    init {
-        val cardDao = AppDatabase.getInstance(application).cardDao()
-        val deckDao = AppDatabase.getInstance(application).deckDao()
-        val tagDao = AppDatabase.getInstance(application).tagDao()
-        repository = CardRepository(cardDao)
-        deckRepository = DeckRepository(deckDao, tagDao, repository)
-        println("🔄 CardListViewModel инициализирован")
-    }
+//    init {
+//        val cardDao = AppDatabase.getInstance(application).cardDao()
+//        val deckDao = AppDatabase.getInstance(application).deckDao()
+//        val tagDao = AppDatabase.getInstance(application).tagDao()
+//        repository = CardRepository(cardDao)
+//        deckRepository = DeckRepository(deckDao, tagDao, repository)
+//        println("🔄 CardListViewModel инициализирован")
+//    }
 
     fun setDeckId(deckId: Long) {
         currentDeckId = deckId
@@ -88,8 +90,19 @@ class CardListViewModel(application: Application) : AndroidViewModel(application
 
             if (currentDeckId != -1L) {
                 try {
-                    val cardId = repository.createCard(currentDeckId, front, back,questionType = questionType)
+                    // 🔥 Получаем userId из TokenManager
+                    val userId = tokenManager.getUserId()
+                        ?: throw IllegalStateException("User not logged in")
+
+                    val cardId = repository.createCard(
+                        userId = userId,  // 🔥 ПЕРЕДАЁМ userId
+                        deckId = currentDeckId,
+                        front = front,
+                        back = back,
+                        questionType = questionType
+                    )
                     println("✅ Карточка создана с ID: $cardId")
+
 
                     val count = repository.getCardCount(currentDeckId)
                     println("📊 Теперь карточек в колоде: $count")

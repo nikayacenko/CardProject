@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import com.example.cardproject.model.MLPrediction
 import com.example.cardproject.model.ReviewLog
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -23,7 +24,7 @@ import java.nio.channels.FileChannel
 
 @Singleton
 open class TensorFlowLiteModel @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
 
     private var interpreter: Interpreter? = null
