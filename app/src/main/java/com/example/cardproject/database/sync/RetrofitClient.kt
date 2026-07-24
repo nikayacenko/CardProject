@@ -1,6 +1,7 @@
 // app/src/main/java/com/example/cardproject/data/sync/RetrofitClient.kt
 package com.example.cardproject.data.sync
 
+import com.example.cardproject.network.AuthInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -30,17 +31,24 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
-        .build()
+    fun getClient(authInterceptor: AuthInterceptor? = null): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
 
-    val instance: ServerApi by lazy {
-        Retrofit.Builder()
+        authInterceptor?.let {
+            builder.addInterceptor(it)
+        }
+
+        return builder.build()
+    }
+
+    fun getApi(authInterceptor: AuthInterceptor? = null): ServerApi {
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(getClient(authInterceptor))
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ServerApi::class.java)

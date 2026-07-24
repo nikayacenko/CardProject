@@ -26,6 +26,7 @@ class LogService:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
                 card_id INTEGER,
                 question_type TEXT,
                 card_text_length INTEGER,
@@ -55,6 +56,8 @@ class LogService:
         conn.commit()
         conn.close()
 
+    # server/services/log_service.py
+
     def save_logs(self, logs: List[LogEntry], user_id: int) -> int:
         """Сохранить логи пользователя"""
         conn = sqlite3.connect(self.db_path)
@@ -72,14 +75,25 @@ class LogService:
                         linked_cards_count, linked_cards_mastery, was_correct, timestamp
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    user_id, log.card_id, log.question_type, log.card_text_length,
-                    1 if log.has_formulas else 0, log.difficulty_score,
-                    log.response_time_ms, log.hour_of_day, log.day_of_week,
-                    log.fatigue_level, log.cards_reviewed_in_session,
-                    log.total_reviews_before, log.correct_rate_before,
-                    log.streak_correct_before, log.days_since_last_review,
-                    log.linked_cards_count, log.linked_cards_mastery,
-                    1 if log.was_correct else 0, log.timestamp or int(datetime.now().timestamp() * 1000)
+                    user_id,              # ← ДОЛЖНО БЫТЬ ПЕРВЫМ!
+                    log.card_id,
+                    log.question_type,
+                    log.card_text_length,
+                    1 if log.has_formulas else 0,
+                    log.difficulty_score,
+                    log.response_time_ms,
+                    log.hour_of_day,
+                    log.day_of_week,
+                    log.fatigue_level,
+                    log.cards_reviewed_in_session,
+                    log.total_reviews_before,
+                    log.correct_rate_before,
+                    log.streak_correct_before,
+                    log.days_since_last_review,
+                    log.linked_cards_count,
+                    log.linked_cards_mastery,
+                    1 if log.was_correct else 0,
+                    log.timestamp or int(datetime.now().timestamp() * 1000)
                 ))
                 saved += 1
             except Exception as e:
@@ -124,6 +138,7 @@ class LogService:
                 streak_correct_before, days_since_last_review, linked_cards_count,
                 linked_cards_mastery, was_correct
             FROM logs
+            WHERE user_id = ?
             ORDER BY timestamp DESC
             LIMIT ?
         """, (limit,))
@@ -139,3 +154,32 @@ class LogService:
         count = cursor.fetchone()[0]
         conn.close()
         return count
+
+    # services/log_service.py - добавить метод
+
+    def get_logs_for_user(self, user_id: int, limit: int = 5000):
+        """Получить логи конкретного пользователя для обучения"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"📊 Загрузка логов для user_id={user_id}, limit={limit}")
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                card_text_length, has_formulas, question_type,
+                response_time_ms, hour_of_day, day_of_week, fatigue_level,
+                cards_reviewed_in_session, total_reviews_before, correct_rate_before,
+                streak_correct_before, days_since_last_review, linked_cards_count,
+                linked_cards_mastery, was_correct
+            FROM logs
+            WHERE user_id = ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """, (user_id, limit))
+        rows = cursor.fetchall()
+        conn.close()
+
+        logger.info(f"✅ Загружено {len(rows)} логов для user_id={user_id}")
+        return rows

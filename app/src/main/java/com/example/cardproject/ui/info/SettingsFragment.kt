@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.cardproject.MainActivity
 import com.example.cardproject.R
 import com.example.cardproject.databinding.FragmentSettingsBinding
+import com.example.cardproject.ml.OnDeviceTrainer
 import com.example.cardproject.model.LearningMode
 import com.example.cardproject.ui.auth.AuthViewModel
 import com.example.cardproject.ui.auth.LoginFragment
@@ -35,6 +36,8 @@ class SettingsFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: SettingsViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
+    @Inject
+    lateinit var onDeviceTrainer: OnDeviceTrainer
 
     @Inject
     lateinit var dataExporter: DataExporter
@@ -238,8 +241,84 @@ class SettingsFragment : Fragment() {
         binding.logoutButton.setOnClickListener {
             showLogoutConfirmationDialog()
         }
+        binding.onDeviceTrainButton.setOnClickListener {
+            startOnDeviceTraining()
+        }
     }
 
+    private fun startOnDeviceTraining() {
+        // Проверяем, не идёт ли уже обучение
+        if (onDeviceTrainer.isTraining.value) {
+            Toast.makeText(requireContext(), "Обучение уже выполняется", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Проверяем количество логов
+        viewLifecycleOwner.lifecycleScope.launch {
+            val logsCount = viewModel.logsCount.value
+            val MIN_LOGS = 5
+            if (logsCount < MIN_LOGS) {
+                Toast.makeText(
+                    requireContext(),
+                    "Недостаточно данных. Нужно минимум 50 логов (сейчас $logsCount)",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+
+            // Показываем диалог подтверждения
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Дообучение на устройстве")
+                .setMessage("""
+                Будет выполнено дообучение модели на ваших личных данных.
+                
+                📊 Доступно логов: $logsCount
+                ⏱️ Время: ~2-5 минут
+                🔒 Данные не покидают устройство
+                
+                Продолжить?
+            """.trimIndent())
+                .setPositiveButton("Начать") { _, _ ->
+                    performOnDeviceTraining()
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
+        }
+    }
+    private fun performOnDeviceTraining() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Показываем прогресс
+            binding.onDeviceTrainButton.isEnabled = false
+            binding.onDeviceTrainButton.text = "⏳ Обучение..."
+
+            // Наблюдаем за прогрессом
+            lifecycleScope.launch {
+                onDeviceTrainer.trainingProgress.collect { progress ->
+                    if (progress > 0) {
+                        binding.onDeviceTrainButton.text = "⏳ Обучение: ${(progress * 100).toInt()}%"
+                    }
+                }
+            }
+
+            // Запускаем дообучение
+            val success = onDeviceTrainer.fineTuneOnDevice(
+                epochs = 5,
+                batchSize = 16
+            )
+
+            if (success) {
+                Toast.makeText(requireContext(), "✅ Модель дообучена на устройстве!", Toast.LENGTH_LONG).show()
+                binding.onDeviceTrainButton.text = "✅ Дообучено!"
+                // Обновляем статус AI
+                viewModel.refreshData()
+            } else {
+                Toast.makeText(requireContext(), "❌ Ошибка дообучения", Toast.LENGTH_SHORT).show()
+                binding.onDeviceTrainButton.text = "🧠 Дообучить модель на устройстве"
+            }
+
+            binding.onDeviceTrainButton.isEnabled = true
+        }
+    }
     private fun showLogoutConfirmationDialog() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Выход из аккаунта")
@@ -365,6 +444,7 @@ class SettingsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshData()
+        viewModel.refreshServerData()
     }
 
     override fun onDestroyView() {

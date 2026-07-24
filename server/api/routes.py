@@ -141,6 +141,8 @@ async def download_model(authorization: str = Header(...)):
     Скачать последнюю модель пользователя в формате .tflite
     """
     try:
+        print("🔵 [DOWNLOAD] START")
+
         if not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Неверный формат токена")
 
@@ -151,17 +153,23 @@ async def download_model(authorization: str = Header(...)):
             raise HTTPException(status_code=401, detail="Неверный токен")
 
         user_id = int(payload.get("sub", 0))
+        print(f"🔵 [DOWNLOAD] user_id={user_id}")
 
         # Получаем модель пользователя
         model_path = model_service.get_latest_model_path(user_id)
+        print(f"🔵 [DOWNLOAD] model_path={model_path}")
 
         if not model_path or not os.path.exists(model_path):
+            print(f"⚠️ [DOWNLOAD] Модель пользователя не найдена, ищем базовую")
             # Если нет, отдаём базовую модель
             model_path = model_service.get_base_model_path()
+            print(f"🔵 [DOWNLOAD] base_model_path={model_path}")
 
             if not model_path or not os.path.exists(model_path):
+                print(f"❌ [DOWNLOAD] Модель не найдена!")
                 raise HTTPException(status_code=404, detail="Файл модели не найден")
 
+        print(f"✅ [DOWNLOAD] Отдаём файл: {model_path}")
         return FileResponse(
             path=model_path,
             filename="forgetting_model.tflite",
@@ -171,6 +179,9 @@ async def download_model(authorization: str = Header(...)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ [DOWNLOAD] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -231,7 +242,7 @@ async def trigger_fine_tune(authorization: str = Header(...)):
 
         # Проверяем, есть ли достаточно логов
         count = log_service.get_count(user_id)
-        if count < 50:
+        if count < 5:
             return TrainResponse(
                 status="insufficient_data",
                 message=f"Недостаточно данных. Нужно минимум 50 логов, у вас {count}"
@@ -297,7 +308,7 @@ async def health_check():
             "status": "healthy",
             "logs_count": log_service.get_total_count(),
             "users_count": user_service.get_users_count(),
-            "model_version": model_service.get_latest_version(),
+            # "model_version": model_service.get_latest_version(),
             "timestamp": str(datetime.now())
         }
     except Exception as e:
@@ -457,6 +468,39 @@ async def get_current_user(authorization: str = Header(...)):
             email=user_data.get("email"),
             created_at=user_data["created_at"]
         )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # api/routes.py - добавить эндпоинт
+
+@router.post("/model/reset-status")
+async def reset_training_status(authorization: str = Header(...)):
+    """
+    Сбросить статус обучения (для отладки)
+    """
+    try:
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Неверный формат токена")
+
+        token = authorization.replace("Bearer ", "")
+        payload = user_service.verify_token(token)
+
+        if not payload:
+            raise HTTPException(status_code=401, detail="Неверный токен")
+
+        user_id = int(payload.get("sub", 0))
+
+        # Сбрасываем статус
+        model_service.set_training_status(user_id, {
+            'is_running': False,
+            'progress': 0,
+            'message': 'Статус сброшен'
+        })
+
+        return {"status": "reset", "message": f"Статус для пользователя {user_id} сброшен"}
 
     except HTTPException:
         raise

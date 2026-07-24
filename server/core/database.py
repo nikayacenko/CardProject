@@ -26,6 +26,7 @@ class Database:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 card_id INTEGER NOT NULL,
                 question_type TEXT NOT NULL,
                 card_text_length INTEGER DEFAULT 0,
@@ -49,9 +50,10 @@ class Database:
         """)
 
         # Индексы для ускорения запросов
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_user_id ON logs(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_card_id ON logs(card_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_was_correct ON logs(was_correct)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_user_id_timestamp ON logs(user_id, timestamp)")
 
         # Таблица версий моделей
         cursor.execute("""
@@ -259,3 +261,12 @@ class Database:
         conn.commit()
         conn.close()
         return cursor.lastrowid
+
+    def get_count(self, user_id: int) -> int:
+        """Получить количество логов пользователя"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM logs WHERE user_id = ?", (user_id,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count

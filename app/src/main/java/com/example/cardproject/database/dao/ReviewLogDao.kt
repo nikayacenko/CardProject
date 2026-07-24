@@ -52,4 +52,10 @@ interface ReviewLogDao {
 
     @Query("SELECT COUNT(*) FROM review_logs WHERE synced = 0")
     suspend fun getUnsyncedCount(): Int
+
+    @Query("SELECT * FROM review_logs ORDER BY timestamp DESC")
+    suspend fun getAllLogs(): List<ReviewLog>
+
+    @Query("SELECT * FROM review_logs WHERE userId = :userId AND synced = 0 ORDER BY timestamp ASC")
+    suspend fun getUnsyncedLogsByUser(userId: Long): List<ReviewLog>
 }

@@ -59,4 +59,16 @@ class ReviewLogRepository @Inject constructor(
         return reviewLogDao.getUnsyncedCount()
     }
 
+    suspend fun getAllLogs(): List<ReviewLog> {
+        return reviewLogDao.getAllLogs()
+    }
+
+    suspend fun getUnsyncedLogs(userId: Long): List<ReviewLog> {
+        return reviewLogDao.getUnsyncedLogsByUser(userId)
+    }
+
+    suspend fun saveLog(log: ReviewLog) {
+        reviewLogDao.insertLog(log)
+    }
+
 }

@@ -11,7 +11,10 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class DataImporter(private val context: Context) {
+class DataImporter(
+    private val context: Context,
+    private val tokenManager: TokenManager
+) {
 
     data class ImportCard(
         val front: String,
@@ -33,6 +36,9 @@ class DataImporter(private val context: Context) {
 
     suspend fun importSampleData(): String = withContext(Dispatchers.IO) {
         try {
+            val userId = tokenManager.getUserId()
+                ?: return@withContext "❌ Пользователь не авторизован"
+
             val json = context.assets.open("sample_decks.json").bufferedReader().use { it.readText() }
             val gson = Gson()
             val data = gson.fromJson(json, ImportData::class.java)
@@ -44,6 +50,7 @@ class DataImporter(private val context: Context) {
             data.decks.forEach { importDeck ->
                 // Создаем колоду
                 val deck = Deck(
+                    userId = userId,  // 🔥 ДОБАВЛЯЕМ
                     name = importDeck.name,
                     description = importDeck.description,
                     coverColor = importDeck.coverColor,
@@ -60,6 +67,7 @@ class DataImporter(private val context: Context) {
                 // Добавляем карточки
                 importDeck.cards.forEach { importCard ->
                     val card = Card(
+                        userId = userId,  // 🔥 ДОБАВЛЯЕМ
                         deckId = deckId,
                         front = importCard.front,
                         back = importCard.back,

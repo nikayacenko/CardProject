@@ -6,16 +6,19 @@ import com.example.cardproject.model.Deck
 import com.example.cardproject.model.DeckWithTags
 import com.example.cardproject.model.LearningMode
 import com.example.cardproject.model.Tag
+import com.example.cardproject.utils.TokenManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class DeckRepository @Inject constructor(
     private val deckDao: DeckDao,
     private val tagDao: TagDao,
-    private val cardRepository: CardRepository
+    private val cardRepository: CardRepository,
+    private val tokenManager: TokenManager
 ) {
 
     init {
@@ -40,18 +43,45 @@ class DeckRepository @Inject constructor(
         }
     }
     fun getAllDecksWithCardCount(): Flow<List<DeckWithTags>> {
-        return deckDao.getAllDecks().map { decks ->
-            decks.map { deck ->
-                // Загружаем теги для каждой колоды
-                val tags = getTagsByDeckId(deck.id)
+        return flow {
+            while (true) {
+                try {
+                    // 🔥 ПОЛУЧАЕМ userId
+                    val userId = tokenManager.getUserId()
+                    println("🔑 [DeckRepository] Текущий userId: $userId")
 
-                // Получаем количество карточек для этой колоды
-                val cardCount = cardRepository.getCardCount(deck.id)
-                println("📊 DeckRepository: Колода '${deck.name}' имеет $cardCount карточек")
+                    if (userId == null) {
+                        println("⚠️ [DeckRepository] userId = null, возвращаем пустой список")
+                        emit(emptyList())
+                        delay(1000)
+                        continue
+                    }
 
-                // Создаем колоду с актуальным счетчиком
-                val deckWithCount = deck.copy(cardCount = cardCount)
-                DeckWithTags(deckWithCount, tags)
+                    // 🔥 ЗАГРУЖАЕМ КОЛОДЫ ТОЛЬКО ДЛЯ ЭТОГО ПОЛЬЗОВАТЕЛЯ
+                    val decks = deckDao.getDecksByUser(userId)
+                    println("📚 [DeckRepository] Найдено ${decks.size} колод для userId=$userId")
+
+                    // 🔥 ДЛЯ КАЖДОЙ КОЛОДЫ ЗАГРУЖАЕМ ТЕГИ И КОЛИЧЕСТВО КАРТОЧЕК
+                    val result = decks.map { deck ->
+                        val tags = getTagsByDeckId(deck.id)
+                        val cardCount = cardRepository.getCardCount(deck.id)
+                        println("📊 [DeckRepository] Колода '${deck.name}' (ID: ${deck.id}) имеет $cardCount карточек")
+
+                        val deckWithCount = deck.copy(cardCount = cardCount)
+                        DeckWithTags(deckWithCount, tags)
+                    }
+
+                    emit(result)
+
+                    // Ждём перед следующим обновлением
+                    delay(5000)
+
+                } catch (e: Exception) {
+                    println("❌ [DeckRepository] Ошибка загрузки колод: ${e.message}")
+                    e.printStackTrace()
+                    emit(emptyList())
+                    delay(5000)
+                }
             }
         }
     }
@@ -61,30 +91,34 @@ class DeckRepository @Inject constructor(
 
     suspend fun getDeckById(deckId: Long): Deck? = deckDao.getDeckById(deckId)
 
-    suspend fun createDeck(name: String, description: String = ""): Long {
-        val deck = Deck(name = name, description = description)
+    suspend fun createDeck(name: String): Long {
+        val userId = tokenManager.getUserId() ?: throw IllegalStateException("User not logged in")
+        val deck = Deck(userId = userId, name = name)
         return deckDao.insertDeck(deck)
     }
 
     // Новый метод с тегами и обложкой
     suspend fun createDeck(
+        userId: Long,
         name: String,
         description: String = "",
         tags: List<String> = emptyList(),
         coverColor: String? = null,
-        learningMode: LearningMode = LearningMode.LONG_TERM // ДОБАВЛЕНО
+        learningMode: LearningMode = LearningMode.LONG_TERM
     ): Long {
         val deck = Deck(
+            userId = userId,
             name = name,
             description = description,
             coverColor = coverColor ?: "#CCCCCC",
-            learningMode = learningMode // ДОБАВЛЕНО
+            learningMode = learningMode
         )
         val deckId = deckDao.insertDeck(deck)
+        println("   ✅ Колода создана с ID: $deckId")
 
-        // Добавляем теги
         if (tags.isNotEmpty()) {
             tagDao.insertTags(deckId, tags, isForNote = false)
+            println("   ✅ Теги добавлены: $tags")
         }
 
         return deckId
@@ -111,14 +145,15 @@ class DeckRepository @Inject constructor(
     }
 
 
-    suspend fun deleteDeckById(deckId: Long) {
-        deckDao.deleteDeckById(deckId)
-    }
+//    suspend fun deleteDeckById(deckId: Long) {
+//        deckDao.deleteDeckById(deckId)
+//    }
 
     // Методы для работы с тегами
     suspend fun getTagsByDeckId(deckId: Long): List<String> {
         return tagDao.getTagsByDeckId(deckId).map { it.name }
     }
+
 
 
 }

@@ -49,10 +49,14 @@ import com.example.cardproject.ui.notes.NoteListFragment
 import com.example.cardproject.ui.stats.StatsFragment
 import com.example.cardproject.utils.DataImporter
 import com.example.cardproject.utils.TagColorHelper
+import com.example.cardproject.utils.TokenManager
 import com.google.android.material.chip.Chip
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class DeckListFragment : Fragment() {
-
+    @Inject
+    lateinit var tokenManager: TokenManager
     private var _binding: FragmentDeckListBinding? = null
     private val binding get() = _binding!!
     private val viewModel: DeckListViewModel by viewModels()
@@ -104,16 +108,16 @@ class DeckListFragment : Fragment() {
         }
     }
 
-    private fun importSampleData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val importer = DataImporter(requireContext())
-            val result = importer.importSampleData()
-            Toast.makeText(requireContext(), result, Toast.LENGTH_LONG).show()
-
-            // Обновляем список
-            viewModel.refreshData()
-        }
-    }
+//    private fun importSampleData() {
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            val importer = DataImporter(requireContext())
+//            val result = importer.importSampleData()
+//            Toast.makeText(requireContext(), result, Toast.LENGTH_LONG).show()
+//
+//            // Обновляем список
+//            viewModel.refreshData()
+//        }
+//    }
     private fun setupToolbar() {
         // Начальная настройка - обычный режим
         showNormalMode()
@@ -710,6 +714,11 @@ class DeckListFragment : Fragment() {
     }
 
     private fun showCreateDeckDialog() {
+        val userId = tokenManager.getUserId()
+        if (userId == null) {
+            Toast.makeText(requireContext(), "❌ Пользователь не авторизован", Toast.LENGTH_SHORT).show()
+            return
+        }
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Создать новую колоду")
 
@@ -975,6 +984,7 @@ class DeckListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         println("🔍 Fragment onResume - обновляем список колод")
+        viewModel.refreshData()
     }
 
     override fun onDestroyView() {

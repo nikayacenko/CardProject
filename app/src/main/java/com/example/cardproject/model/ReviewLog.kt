@@ -10,6 +10,12 @@ import java.util.Calendar
     tableName = "review_logs",
     foreignKeys = [
         ForeignKey(
+            entity = LocalUser::class,  // 🔥 СВЯЗЬ С ПОЛЬЗОВАТЕЛЕМ
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.NO_ACTION
+        ),
+        ForeignKey(
             entity = Card::class,
             parentColumns = ["id"],
             childColumns = ["cardId"],
@@ -17,14 +23,17 @@ import java.util.Calendar
         )
     ],
     indices = [
+        Index(value = ["userId"]),      // 🔥 ДОБАВИТЬ
         Index(value = ["cardId"]),
         Index(value = ["timestamp"]),
         Index(value = ["deckId"]),
-        Index(value = ["wasCorrect"])
+        Index(value = ["wasCorrect"]),
+        Index(value = ["userId", "timestamp"])  // Для быстрых запросов логов пользователя
     ]
 )
 data class ReviewLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val userId: Long,
     val cardId: Long,
     val deckId: Long,
     val timestamp: Long = System.currentTimeMillis(),
@@ -66,11 +75,12 @@ data class ReviewLog(
             quality: Int,
             responseTimeMs: Long,
             linkedCardsMastery: Float = 0.5f,
-            correctRateBefore: Float
+            correctRateBefore: Float,
+            userId: Long
         ): ReviewLog {
             val calendar = Calendar.getInstance()
-
             return ReviewLog(
+                userId = userId,
                 cardId = card.id,
                 deckId = card.deckId,
                 quality = quality,

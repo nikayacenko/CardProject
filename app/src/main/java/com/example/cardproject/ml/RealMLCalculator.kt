@@ -7,6 +7,7 @@ import com.example.cardproject.model.Card
 import com.example.cardproject.model.LearningMode
 import com.example.cardproject.model.MLPrediction
 import com.example.cardproject.model.ReviewLog
+import com.example.cardproject.utils.TokenManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 class RealMLCalculator @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val tfliteModel: TensorFlowLiteModel
+    private val tfliteModel: TensorFlowLiteModel,
+    private val tokenManager: TokenManager
 ) {
 
     private val _isMLReady = MutableStateFlow(false)
@@ -40,7 +42,7 @@ class RealMLCalculator @Inject constructor(
         if (!_isMLReady.value) {
             return fallbackCalculator(card, context, learningMode, quality, responseTimeMs)
         }
-
+        val userId = getCurrentUserId()
         // 2. Создаем признаки для ML модели
         val reviewLog = ReviewLog.from(
             card = card,
@@ -48,7 +50,8 @@ class RealMLCalculator @Inject constructor(
             quality = quality,
             responseTimeMs = responseTimeMs,
             linkedCardsMastery = 0.5f, // TODO: получить реальные данные
-            correctRateBefore = calculateCorrectRate(card)
+            correctRateBefore = calculateCorrectRate(card),
+            userId = userId
         )
 
         // 3. Получаем предсказание от TFLite модели
@@ -79,7 +82,10 @@ class RealMLCalculator @Inject constructor(
             totalReviews = card.totalReviews + 1
         )
     }
-
+    private fun getCurrentUserId(): Long {
+        return tokenManager.getUserId()
+            ?: throw IllegalStateException("User not logged in")
+    }
     /**
      * Запасной калькулятор (когда модель не готова)
      */

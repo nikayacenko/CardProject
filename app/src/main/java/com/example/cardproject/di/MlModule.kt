@@ -3,6 +3,7 @@ package com.example.cardproject.di
 import android.content.Context
 import com.example.cardproject.ml.MLSpacedRepetitionCalculator
 import com.example.cardproject.ml.TensorFlowLiteModel
+import com.example.cardproject.utils.TokenManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,8 +27,13 @@ object MlModule {
     @Singleton
     fun provideMLCalculator(
         tfliteModel: TensorFlowLiteModel,
-        reviewLogRepository: com.example.cardproject.database.repository.ReviewLogRepository
+        reviewLogRepository: com.example.cardproject.database.repository.ReviewLogRepository,
+        tokenManager: TokenManager  // 🔥 ДОБАВЛЯЕМ
     ): MLSpacedRepetitionCalculator {
-        return MLSpacedRepetitionCalculator(tfliteModel, reviewLogRepository)
+        return MLSpacedRepetitionCalculator(
+            tfliteModel,
+            reviewLogRepository,
+            tokenManager  // 🔥 ПЕРЕДАЁМ
+        )
     }
 }
