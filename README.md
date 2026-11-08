@@ -15,17 +15,27 @@ Android-приложение — нативное приложение на Kotl
 Настраиваемый интерфейс — выбор цветовой темы, настройка режимов обучения
 
 Технологический стек
+
 Android
+
 Язык: Kotlin
+
 Архитектура: MVVM
+
 DI: Dagger Hilt
+
 БД: Room (SQLite)
+
 ML: TensorFlow Lite
+
 Асинхронность: Kotlin Coroutines
+
 UI: Jetpack Compose, Material 3
 
 Сервер
+
 Язык: Python 3.11+
+
 Фреймворк: FastAPI
 БД: SQLite
 
